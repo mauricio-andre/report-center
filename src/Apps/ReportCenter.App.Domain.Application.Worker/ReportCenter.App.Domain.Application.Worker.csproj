@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.31.1" />
+    <PackageReference Include="Grpc.Net.ClientFactory" Version="2.71.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.72.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
+    <PackageReference Include="Scrutor" Version="4.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\ReportCenter.Core\ReportCenter.Core.csproj" />
+    <ProjectReference Include="..\..\Providers\ReportCenter.MongoDB\ReportCenter.MongoDB.csproj" />
+    <ProjectReference Include="..\..\Providers\ReportCenter.RabbitMQ\ReportCenter.RabbitMQ.csproj" />
+    <ProjectReference Include="..\..\Providers\ReportCenter.CustomStringLocalizer\ReportCenter.CustomStringLocalizer.csproj" />
+    <ProjectReference Include="..\..\Providers\ReportCenter.CustomConsoleFormatter\ReportCenter.CustomConsoleFormatter.csproj" />
+    <ProjectReference Include="..\..\Providers\ReportCenter.OpenTelemetry\ReportCenter.OpenTelemetry.csproj" />
+    <ProjectReference Include="..\..\Providers\ReportCenter.LocalStorage\ReportCenter.LocalStorage.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="Protos\**\*_service.proto" GrpcServices="Client" />
+  </ItemGroup>
+</Project>

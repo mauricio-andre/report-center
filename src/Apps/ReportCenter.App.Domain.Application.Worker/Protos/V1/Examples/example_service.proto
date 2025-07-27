@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "ReportCenter.App.GrpcServer.Methods.V1.Examples";
+
+package reportcenter.app.grpcserver.methods.v1.examples;
+
+service ExamplesService {
+  rpc ExportList(ExampleExportRequest) returns (stream ExampleReply);
+}
+
+message ExampleExportRequest {
+  string texto = 1;
+}
+
+message ExampleReply {
+  string texto = 1;
+  int32 inteiro = 2;
+  double decimal = 3;
+  google.protobuf.Timestamp data = 4;
+}

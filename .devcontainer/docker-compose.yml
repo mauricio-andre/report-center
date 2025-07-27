@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspace:cached
+    working_dir: /workspace
+    depends_on:
+      - mongo
+      - rabbitmq
+    environment:
+      - DOTNET_USE_POLLING_FILE_WATCHER=1
+    command: sleep infinity
+
+  mongo:
+    image: mongo:latest
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - dev-container:/data/db
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - "5672:5672"     # Porta padrão do broker
+      - "15672:15672"   # Porta do painel de controle
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - dev-container:/data/rabbit
+
+volumes:
+  dev-container:
