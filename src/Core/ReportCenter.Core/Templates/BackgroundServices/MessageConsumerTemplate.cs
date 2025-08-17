@@ -144,7 +144,6 @@ public class MessageConsumerTemplate : BackgroundService
 
                     var service = _reportServiceFactory!.CreateInstance(report!, _serviceScope!);
 
-                    service.SetFileExtension(report!);
                     await service.HandleAsync(report!, cancellationToken);
 
                     stopwatch.Stop();
@@ -152,8 +151,7 @@ public class MessageConsumerTemplate : BackgroundService
                         new UpdateStateReportCommand(
                             message.Id,
                             ProcessState.Success,
-                            stopwatch.Elapsed,
-                            report!.FileExtension),
+                            stopwatch.Elapsed),
                         cancellationToken);
                 }
             }

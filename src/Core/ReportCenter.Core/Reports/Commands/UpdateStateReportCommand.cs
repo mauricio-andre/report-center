@@ -6,6 +6,5 @@ namespace ReportCenter.Core.Reports.Commands;
 public record UpdateStateReportCommand(
     Guid Id,
     ProcessState ProcessState,
-    TimeSpan? ProcessTimer = null,
-    string? FileExtension = null
+    TimeSpan? ProcessTimer = null
 ) : IRequest;

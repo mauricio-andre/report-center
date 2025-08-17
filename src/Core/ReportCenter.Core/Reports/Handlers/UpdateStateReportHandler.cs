@@ -33,9 +33,6 @@ public class UpdateStateReportHandler : IRequestHandler<UpdateStateReportCommand
         entity.ProcessState = request.ProcessState;
         entity.ProcessTimer = request.ProcessTimer;
 
-        if (!string.IsNullOrEmpty(request.FileExtension))
-            entity.FileExtension = request.FileExtension;
-
         _coreDbContext.Update(entity);
         await _coreDbContext.SaveChangesAsync();
     }

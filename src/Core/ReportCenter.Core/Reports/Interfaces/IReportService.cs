@@ -5,5 +5,4 @@ namespace ReportCenter.Core.Reports.Interfaces;
 public interface IReportService
 {
     Task HandleAsync(Report report, CancellationToken cancellationToken = default);
-    string SetFileExtension(Report report);
 }

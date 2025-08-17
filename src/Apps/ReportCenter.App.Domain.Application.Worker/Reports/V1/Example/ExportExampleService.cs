@@ -26,55 +26,35 @@ public class ExportExampleService : IReportService
     {
         var filters = report.Filters.ToObject<ExampleExportRequest>();
 
-        using (MemoryStream memory = new())
+        using (var stream = await _storageService.OpenWriteAsync(report.FullFileName, cancellationToken))
+        using (var serverStreamingCall = _client.ExportList(filters, cancellationToken: cancellationToken))
+        using (var xlWorkbook = new XLWorkbook())
         {
-            using (var serverStreamingCall = _client.ExportList(filters, cancellationToken: cancellationToken))
-            using (var xlWorkbook = new XLWorkbook())
+            var _sheet = xlWorkbook.Worksheets.Add(WorksheetExampleDto.WorksheetName);
+
+            _sheet.Cell(1, 1).Value = "Column 1 Header";
+            _sheet.Cell(1, 2).Value = "Column 2 Header";
+            _sheet.Cell(1, 3).Value = "Column 3 Header";
+            _sheet.Cell(1, 4).Value = "Column 4 Header";
+            _sheet.Cell(1, 5).Value = "Column 5 Header";
+
+            var rowNumber = 2;
+            while (await serverStreamingCall.ResponseStream.MoveNext(cancellationToken))
             {
-                IXLTable? table = null;
-                var tempList = new List<WorksheetExampleDto>();
-                var _sheet = xlWorkbook.Worksheets.Add(WorksheetExampleDto.WorksheetName);
-                while (await serverStreamingCall.ResponseStream.MoveNext(cancellationToken))
-                {
-                    tempList.Add(new WorksheetExampleDto(
+                _sheet.Row(rowNumber).Cell(1).InsertData(new[] {
+                    new WorksheetExampleDto(
                         serverStreamingCall.ResponseStream.Current.Texto,
                         serverStreamingCall.ResponseStream.Current.Inteiro,
                         (decimal)serverStreamingCall.ResponseStream.Current.Decimal,
                         serverStreamingCall.ResponseStream.Current.Data.ToDateTimeOffset(),
-                        report.ExtraProperties.Data["additionalProp1"].ToString()!));
+                        report.ExtraProperties.Data["additionalProp1"].ToString()!)
+                });
 
-                    if (tempList.Count < 100)
-                        continue;
-
-                    table = DataXLTable(table, tempList, _sheet);
-                }
-
-                table = DataXLTable(table, tempList, _sheet);
-                cancellationToken.ThrowIfCancellationRequested();
-                xlWorkbook.SaveAs(memory);
+                rowNumber++;
             }
 
-            memory.Position = 0;
             cancellationToken.ThrowIfCancellationRequested();
-            await _storageService.SaveAsync(report.FullFileName, memory, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", cancellationToken);
+            xlWorkbook.SaveAs(stream);
         }
-
     }
-
-    private static IXLTable? DataXLTable(IXLTable? table, List<WorksheetExampleDto> tempList, IXLWorksheet _sheet)
-    {
-        if (tempList.Count != 0)
-        {
-            if (table == null)
-                table = _sheet.FirstCell().InsertTable(tempList);
-            else
-                _ = table.AppendData(tempList);
-
-            tempList.Clear();
-        }
-
-        return table;
-    }
-
-    public string SetFileExtension(Report report) => report.FileExtension = "xlsx";
 }

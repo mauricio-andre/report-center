@@ -1,4 +1,4 @@
-using ReportCenter.App.Domain.Application.Worker.Reports.V1.Example;
+using ReportCenter.App.Domain.Application.Worker.Reports;
 using ReportCenter.Core.Reports.Entities;
 using ReportCenter.Core.Reports.Interfaces;
 
@@ -21,7 +21,8 @@ public class ReportServiceFactory : IReportServiceFactory
 
         return key switch
         {
-            "DOMAIN:APPLICATION:EXPORT:1:DOCUMENTNAME" => scope.ServiceProvider.GetRequiredService<ExportExampleService>(),
+            "DOMAIN:APPLICATION:EXPORT:1:DOCUMENTNAME" => scope.ServiceProvider.GetRequiredService<V1.Example.ExportExampleService>(),
+            "DOMAIN:APPLICATION:EXPORT:2:DOCUMENTNAME" => scope.ServiceProvider.GetRequiredService<V2.Example.ExportExampleService>(),
             _ => throw new NotImplementedException(),
         };
     }

@@ -32,7 +32,7 @@ public class Report
     public FlexibleObject Filters { get; set; } = new FlexibleObject();
     public FlexibleObject ExtraProperties { get; set; } = new FlexibleObject();
     public TimeSpan? ProcessTimer { get; set; }
-    public string? FileExtension { get; set; }
+    public string FileExtension { get; set; } = "xlsx";
 
     [NotMapped]
     public string FullFileName
