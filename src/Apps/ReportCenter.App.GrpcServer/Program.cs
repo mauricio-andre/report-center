@@ -19,6 +19,8 @@ using ReportCenter.MongoDB.Repositories;
 using ReportCenter.OpenTelemetry.Extensions;
 using ReportCenter.RabbitMQ.Extensions;
 using ReportCenter.RabbitMQ.Services;
+using ReportCenter.AzureServiceBus.Extensions;
+using ReportCenter.AzureServiceBus.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +28,8 @@ builder.Services
     .AddMongoCoreDbContext(
         builder.Configuration.GetConnectionString("CoreDbContext")!,
         builder.Configuration.GetValue<string>("MongoDBName")!)
-    .AddRabbitMQConsumer(builder.Configuration.GetConnectionString("RabbitMQ")!)
+    // .AddRabbitMQConsumer(builder.Configuration, builder.Configuration.GetConnectionString("RabbitMQ")!)
+    .AddAzureServiceBusConsumer(builder.Configuration, builder.Configuration.GetConnectionString("ServiceBus")!)
     .AddMediatR(config => config.RegisterServicesFromAssemblyContaining<CoreDbContext>())
     .Scan(scan => scan.FromAssembliesOf(typeof(CoreDbContext))
         .AddClasses(classes => classes.AssignableTo(typeof(AbstractValidator<>)))
@@ -43,7 +46,8 @@ builder.Services
     .AddScoped<IReportRepository, ExportRepository>()
     .AddSingleton<IGrpcInterceptorAttributeMap, GrpcInterceptorAttributeMap>()
     .AddSingleton(_ => new ReportCenterActivitySource(builder.Configuration.GetValue<string>("ServiceName")!))
-    .AddSingleton<IMessagePublisher, RabbitMQPublisher>();
+    .AddSingleton<IMessagePublisher, AzureServiceBusPublisher>();
+    // .AddSingleton<IMessagePublisher, RabbitMQPublisher>();
 
 // configuration authentication
 builder.Services

@@ -14,8 +14,8 @@ public class LocalStorage : IStorageService
     {
         var filePath = Path.Combine(_basePath, fullFileName);
         Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
-        Stream temp = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
-        return Task.FromResult(temp);
+        Stream stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
+        return Task.FromResult(stream);
     }
 
     public Task SaveAsync(string fullFileName, Stream content, string contentType, CancellationToken cancellationToken = default)

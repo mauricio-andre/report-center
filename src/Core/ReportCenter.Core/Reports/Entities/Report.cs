@@ -35,6 +35,22 @@ public class Report
     public string FileExtension { get; set; } = "xlsx";
 
     [NotMapped]
+    public string ComposeDocKey
+    {
+        get
+        => string.Concat(
+            Domain,
+            ":",
+            Application,
+            ":",
+            ReportType.ToString(),
+            ":",
+            Version.ToString(),
+            ":",
+            DocumentName);
+    }
+
+    [NotMapped]
     public string FullFileName
     {
         get

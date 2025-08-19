@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\Core\ReportCenter.Core\ReportCenter.Core.csproj" />
     <ProjectReference Include="..\..\Providers\ReportCenter.MongoDB\ReportCenter.MongoDB.csproj" />
     <ProjectReference Include="..\..\Providers\ReportCenter.RabbitMQ\ReportCenter.RabbitMQ.csproj" />
+    <ProjectReference Include="..\..\Providers\ReportCenter.AzureServiceBus\ReportCenter.AzureServiceBus.csproj" />
     <ProjectReference Include="..\..\Providers\ReportCenter.CustomStringLocalizer\ReportCenter.CustomStringLocalizer.csproj" />
     <ProjectReference Include="..\..\Providers\ReportCenter.CustomConsoleFormatter\ReportCenter.CustomConsoleFormatter.csproj" />
     <ProjectReference Include="..\..\Providers\ReportCenter.OpenTelemetry\ReportCenter.OpenTelemetry.csproj" />

@@ -62,9 +62,9 @@ public class MessageConsumerTemplate : BackgroundService
         await base.StartAsync(cancellationToken);
     }
 
-    protected override Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        return _messageConsumer.RegistryConsumer(ReceivedAsync, cancellationToken);
+        return _messageConsumer.RegistryConsumer(ReceivedAsync, stoppingToken);
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)
@@ -156,9 +156,9 @@ public class MessageConsumerTemplate : BackgroundService
                 }
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
-            _logger.LogInformation("Processing stopped, rescheduling message");
+            _logger.LogInformation(ex, "Processing stopped, rescheduling message");
             await _messagePublisher.PublishAsync(message);
         }
         catch (Exception ex)

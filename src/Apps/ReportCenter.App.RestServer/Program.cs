@@ -24,11 +24,12 @@ using ReportCenter.Mongo.Extensions;
 using ReportCenter.MongoDB.Repositories;
 using ReportCenter.OpenTelemetry.Extensions;
 using ReportCenter.RabbitMQ.Extensions;
-using ReportCenter.RabbitMQ.Options;
 using ReportCenter.RabbitMQ.Services;
 using ReportCenter.Scalar.Extensions;
 using ReportCenter.Swagger.Extensions;
 using Scalar.AspNetCore;
+using ReportCenter.AzureServiceBus.Extensions;
+using ReportCenter.AzureServiceBus.Services;
 
 namespace ReportCenter.App.RestServer;
 
@@ -46,7 +47,8 @@ public class Program
             .AddMongoCoreDbContext(
                 builder.Configuration.GetConnectionString("CoreDbContext")!,
                 builder.Configuration.GetValue<string>("MongoDBName")!)
-            .AddRabbitMQConsumer(builder.Configuration.GetConnectionString("RabbitMQ")!)
+            // .AddRabbitMQConsumer(builder.Configuration, builder.Configuration.GetConnectionString("RabbitMQ")!)
+            .AddAzureServiceBusConsumer(builder.Configuration, builder.Configuration.GetConnectionString("ServiceBus")!)
             .AddMediatR(config => config.RegisterServicesFromAssemblyContaining<CoreDbContext>())
             .Scan(scan => scan.FromAssembliesOf(typeof(CoreDbContext))
                 .AddClasses(classes => classes.AssignableTo(typeof(AbstractValidator<>)))
@@ -62,7 +64,8 @@ public class Program
             .AddScoped<ICurrentIdentity, CurrentIdentity>()
             .AddSingleton(_ => new ReportCenterActivitySource(builder.Configuration.GetValue<string>("ServiceName")!))
             .AddScoped<IReportRepository, ExportRepository>()
-            .AddSingleton<IMessagePublisher, RabbitMQPublisher>();
+            .AddSingleton<IMessagePublisher, AzureServiceBusPublisher>();
+            // .AddSingleton<IMessagePublisher, RabbitMQPublisher>();
 
         // Configuration string location
         builder.Services.Configure<RequestLocalizationOptions>(options =>
@@ -153,9 +156,6 @@ public class Program
         builder.Services.AddCustomConsoleFormatterProvider<LoggerPropertiesService>();
         builder.Services.AddSwaggerProvider(builder.Configuration);
         builder.AddOpenTelemetryProvider();
-
-        // Configure options
-        builder.Services.Configure<RabbitMQOptions>(builder.Configuration.GetSection(RabbitMQOptions.Position));
 
         var app = builder.Build();
 

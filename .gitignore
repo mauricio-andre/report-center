@@ -6,7 +6,7 @@
 bin/
 obj/
 # Dev settings
-appsettings.Development.json
+appsettings.*.json
 
 # IDE folders
 .vscode/

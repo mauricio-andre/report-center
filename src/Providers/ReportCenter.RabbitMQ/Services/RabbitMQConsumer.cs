@@ -12,7 +12,7 @@ using ReportCenter.RabbitMQ.Options;
 
 namespace ReportCenter.RabbitMQ.Services;
 
-public class RabbitMQConsumer : IMessageConsumer
+public sealed class RabbitMQConsumer : IMessageConsumer
 {
     private readonly IConnectionFactory _connectionFactory;
     private readonly ILogger<RabbitMQConsumer> _logger;
@@ -30,14 +30,14 @@ public class RabbitMQConsumer : IMessageConsumer
         _rabbitMqOptions = rabbitMqOptions.Value;
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public async Task StartAsync(CancellationToken cancellationToken = default)
     {
         _connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
         _channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
         await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false, cancellationToken: cancellationToken);
     }
 
-    public async Task RegistryConsumer(Func<object, CancellationToken, Task> ReceivedAsync, CancellationToken cancellationToken)
+    public async Task RegistryConsumer(Func<object, CancellationToken, Task> ReceivedAsync, CancellationToken cancellationToken = default)
     {
         var consumer = new AsyncEventingBasicConsumer(_channel!);
         consumer.ReceivedAsync += async (sender, eventArgs) =>
@@ -88,7 +88,7 @@ public class RabbitMQConsumer : IMessageConsumer
         return ValueTask.FromResult(transactionId);
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken cancellationToken = default)
     {
         await _channel!.CloseAsync(cancellationToken: cancellationToken);
         await _connection!.CloseAsync(cancellationToken: cancellationToken);
