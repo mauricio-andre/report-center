@@ -11,7 +11,6 @@ using ReportCenter.Common.Providers.MessageQueues.Dtos;
 using ReportCenter.Common.Providers.MessageQueues.Enums;
 using ReportCenter.Common.Providers.MessageQueues.Interfaces;
 using ReportCenter.Core.Reports.Commands;
-using ReportCenter.Core.Reports.Entities;
 using ReportCenter.Core.Reports.Interfaces;
 
 namespace ReportCenter.Core.Templates.BackgroundServices;
@@ -92,8 +91,8 @@ public class MessageConsumerTemplate : BackgroundService
         }
         catch (Exception ex)
         {
-            await _messageConsumer.AbortProcessingAsync(args, ex, cancellationToken);
             _logger.LogError(ex, "An error occurred while deserializing the message, incompatible message body or header.");
+            await _messageConsumer.AbortProcessingAsync(args, ex, cancellationToken);
             return;
         }
 
@@ -160,12 +159,15 @@ public class MessageConsumerTemplate : BackgroundService
         {
             _logger.LogInformation(ex, "Processing stopped, rescheduling message");
             await _messagePublisher.PublishAsync(message);
+            await _mediator!.Send(
+                new UpdateStateReportCommand(message.Id, ProcessState.Waiting, ProcessMessage: "Recolocado na fila"), // TODO: Colocar no arquivo de tradução
+                cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.LogCritical(ex, "An unhandled error occurred while processing the message");
             await _mediator!.Send(
-                new UpdateStateReportCommand(message.Id, ProcessState.Error),
+                new UpdateStateReportCommand(message.Id, ProcessState.Error, ProcessMessage: ex.Message),
                 cancellationToken);
         }
     }
@@ -174,6 +176,7 @@ public class MessageConsumerTemplate : BackgroundService
         => _reportWorkerOptions.Domain.Equals(message.Domain, StringComparison.InvariantCultureIgnoreCase)
             && _reportWorkerOptions.Application.Equals(message.Application, StringComparison.InvariantCultureIgnoreCase)
             && (!_reportWorkerOptions.ReportType.HasValue
+                || _reportWorkerOptions.ReportType == 0
                 || _reportWorkerOptions.ReportType == message.ReportType)
             && (!string.IsNullOrEmpty(_reportWorkerOptions.DocumentName)
                 || _reportWorkerOptions.DocumentName!.Equals(message.DocumentName, StringComparison.InvariantCultureIgnoreCase));

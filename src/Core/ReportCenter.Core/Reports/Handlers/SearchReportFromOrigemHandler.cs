@@ -32,7 +32,7 @@ public class SearchReportFromOrigemHandler : IRequestHandler<SearchReportFromOri
         var totalCount = await query.CountAsync();
 
         query = query
-            .ApplySorting(request)
+            .ApplySorting(request, query => query.OrderByDescending(report => report.CreationDate))
             .ApplyPagination(request);
 
         var items = MapToResponse(query).AsAsyncEnumerable();
@@ -46,16 +46,17 @@ public class SearchReportFromOrigemHandler : IRequestHandler<SearchReportFromOri
             .Where(entity => entity.Application.ToLower() == request.Application.ToLower())
             .Where(entity => entity.DocumentName.ToLower() == request.DocumentName.ToLower())
             .Where(entity => entity.ReportType == request.ReportType)
+            .Where(entity => entity.Version == request.version)
             .WhereIf(
                 !request.IncludeExpiredFiles,
                 entity => entity.ExpirationDate >= DateTimeOffset.Now)
             .WhereIf(
                 !string.IsNullOrEmpty(request.DocumentKeyComposition)
-                    && request.DocumentKeyComposition.StartsWith("%"),
+                    && request.DocumentKeyComposition.StartsWith('%'),
                 entity => entity.DocumentKey.ToLower().StartsWith(request.DocumentKeyComposition!.ToLower().Replace("%", "")))
             .WhereIf(
                 !string.IsNullOrEmpty(request.DocumentKeyComposition)
-                    && request.DocumentKeyComposition.EndsWith("%"),
+                    && request.DocumentKeyComposition.EndsWith('%'),
                 entity => entity.DocumentKey.ToLower().EndsWith(request.DocumentKeyComposition!.ToLower().Replace("%", "")));
     }
 
@@ -72,6 +73,8 @@ public class SearchReportFromOrigemHandler : IRequestHandler<SearchReportFromOri
             entity.CreationDate,
             entity.ExpirationDate,
             entity.ProcessState,
-            entity.ProcessTimer
+            entity.ProcessTimer,
+            entity.ExternalProcess,
+            entity.ProcessMessage
         ));
 }

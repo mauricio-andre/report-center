@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Localization;
 using ReportCenter.Common.Exceptions;
@@ -13,19 +14,23 @@ public class GetReportByIdHandler : IRequestHandler<GetReportByIdQuery, ReportCo
 {
     private readonly IReportRepository _exportRepository;
     private readonly IStringLocalizer<ReportCenterResource> _stringLocalizer;
+    private readonly IValidator<GetReportByIdQuery> _validator;
 
     public GetReportByIdHandler(
         IReportRepository exportRepository,
-        IStringLocalizer<ReportCenterResource> stringLocalizer)
+        IStringLocalizer<ReportCenterResource> stringLocalizer,
+        IValidator<GetReportByIdQuery> validator)
     {
         _exportRepository = exportRepository;
         _stringLocalizer = stringLocalizer;
+        _validator = validator;
     }
 
     public async Task<ReportCompleteResponse> Handle(
         GetReportByIdQuery request,
         CancellationToken cancellationToken)
     {
+        await _validator.ValidateAndThrowAsync(request, cancellationToken);
         var entity = await _exportRepository.GetByIdAsync(request.Id);
 
         if (entity == null)
@@ -34,7 +39,7 @@ public class GetReportByIdHandler : IRequestHandler<GetReportByIdQuery, ReportCo
         return MapToResponse(entity);
     }
 
-    private ReportCompleteResponse MapToResponse(Report entity) =>
+    private static ReportCompleteResponse MapToResponse(Report entity) =>
         new ReportCompleteResponse(
             entity.Id,
             entity.Domain,
@@ -50,6 +55,8 @@ public class GetReportByIdHandler : IRequestHandler<GetReportByIdQuery, ReportCo
             entity.Filters.Data,
             entity.ExtraProperties.Data,
             entity.FileExtension,
-            entity.ProcessTimer
+            entity.ProcessTimer,
+            entity.ExternalProcess,
+            entity.ProcessMessage
         );
 }

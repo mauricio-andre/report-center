@@ -14,5 +14,7 @@ public record ReportResponse(
     DateTimeOffset CreationDate,
     DateTimeOffset? ExpirationDate,
     ProcessState ProcessState,
-    TimeSpan? ProcessTimer
+    TimeSpan? ProcessTimer,
+    bool ExternalProcess,
+    string? ProcessMessage
 );

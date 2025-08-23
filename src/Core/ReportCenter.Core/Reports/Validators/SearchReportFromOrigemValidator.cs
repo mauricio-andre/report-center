@@ -3,15 +3,18 @@ using ReportCenter.Core.Reports.Queries;
 
 namespace ReportCenter.Core.Reports.Validators;
 
-public class SearchReportExportFromOrigemValidator : AbstractValidator<SearchReportFromOrigemQuery>
+public class SearchReportFromOrigemValidator : AbstractValidator<SearchReportFromOrigemQuery>
 {
-    public SearchReportExportFromOrigemValidator()
+    public SearchReportFromOrigemValidator()
     {
         RuleFor(prop => prop.Domain)
             .NotEmpty();
 
         RuleFor(prop => prop.Application)
             .NotEmpty();
+
+        RuleFor(prop => (int)prop.version)
+            .GreaterThan(0);
 
         RuleFor(prop => prop.DocumentName)
             .NotEmpty();

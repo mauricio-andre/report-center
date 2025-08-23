@@ -30,6 +30,8 @@ using ReportCenter.Swagger.Extensions;
 using Scalar.AspNetCore;
 using ReportCenter.AzureServiceBus.Extensions;
 using ReportCenter.AzureServiceBus.Services;
+using ReportCenter.Common.Providers.Storage.Interfaces;
+using ReportCenter.LocalStorages.Services;
 
 namespace ReportCenter.App.RestServer;
 
@@ -64,6 +66,7 @@ public class Program
             .AddScoped<ICurrentIdentity, CurrentIdentity>()
             .AddSingleton(_ => new ReportCenterActivitySource(builder.Configuration.GetValue<string>("ServiceName")!))
             .AddScoped<IReportRepository, ExportRepository>()
+            .AddSingleton<IStorageService, LocalStorage>()
             .AddSingleton<IMessagePublisher, AzureServiceBusPublisher>();
             // .AddSingleton<IMessagePublisher, RabbitMQPublisher>();
 

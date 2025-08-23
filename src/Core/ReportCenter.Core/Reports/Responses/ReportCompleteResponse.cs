@@ -17,5 +17,7 @@ public record ReportCompleteResponse(
     Dictionary<string, object> Filters,
     Dictionary<string, object> Properties,
     string? FileExtension,
-    TimeSpan? ProcessTimer
+    TimeSpan? ProcessTimer,
+    bool ExternalProcess,
+    string? ProcessMessage
 );

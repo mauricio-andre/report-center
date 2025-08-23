@@ -45,28 +45,35 @@ public class ReportExportController : ControllerBase
     }
 
     [HttpGet("{Id}/download")]
+    [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
     [ProducesResponseType<ReportCompleteResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Download(
-        [FromRoute] Guid Id)
+        [FromRoute] Guid Id,
+        CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetReportByIdQuery(Id));
-        return Ok(result);
+        var result = await _mediator.Send(new DownloadReportQuery(Id), cancellationToken);
+        if (result == null)
+            return NotFound();
+
+        return File(result, "application/octet-stream", "report-center-file.xlsx", enableRangeProcessing: true);
     }
 
-    [HttpGet("{domain}/{application}/{documentName}")]
+    [HttpGet("{domain}/{application}/{versionDoc}/{documentName}")]
     [ProducesResponseType<IList<ReportResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<IList<ReportResponse>>(StatusCodes.Status206PartialContent)]
     public async Task<IActionResult> GetFromOrigem(
         [FromRoute] string domain,
         [FromRoute] string application,
         [FromRoute] string documentName,
+        [FromRoute] short versionDoc,
         [FromQuery] SearchReportFromOrigemRequestDto request)
     {
         var result = await _mediator.Send(new SearchReportFromOrigemQuery(
             domain,
             application,
-            ReportType.Export,
+            versionDoc,
             documentName,
+            ReportType.Export,
             request.DocumentKeyComposition,
             request.SortBy,
             request.Skip,
@@ -86,19 +93,21 @@ public class ReportExportController : ControllerBase
         );
     }
 
-    [HttpGet("{domain}/{application}/{documentName}/{documentKey}")]
+    [HttpGet("{domain}/{application}/{versionDoc}/{documentName}/{documentKey}")]
     [ProducesResponseType<ReportResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetFromOrigem(
         [FromRoute] string domain,
         [FromRoute] string application,
+        [FromRoute] short versionDoc,
         [FromRoute] string documentName,
         [FromRoute] string documentKey)
     {
         var result = await _mediator.Send(new SearchReportFromOrigemQuery(
             domain,
             application,
-            ReportType.Export,
+            versionDoc,
             documentName,
+            ReportType.Export,
             documentKey,
             null,
             0,

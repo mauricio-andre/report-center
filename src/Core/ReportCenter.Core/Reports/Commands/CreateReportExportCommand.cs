@@ -11,5 +11,6 @@ public record CreateReportExportCommand(
     short Version,
     DateTimeOffset ExpirationDate,
     Dictionary<string, object>? Filters,
-    Dictionary<string, object>? ExtraProperties
+    Dictionary<string, object>? ExtraProperties,
+    bool ExternalProcess = false
 ) : IRequest<ReportResponse>;

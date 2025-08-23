@@ -9,8 +9,9 @@ namespace ReportCenter.Core.Reports.Queries;
 public record SearchReportFromOrigemQuery(
     string Domain,
     string Application,
-    ReportType ReportType,
+    short version,
     string DocumentName,
+    ReportType ReportType,
     string? DocumentKeyComposition,
     string? SortBy,
     int? Skip,

@@ -75,7 +75,8 @@ public class CreateReportExportHandler : IRequestHandler<CreateReportExportComma
         CreationDate = DateTimeOffset.Now,
         ExpirationDate = request.ExpirationDate,
         Filters = new FlexibleObject(request.Filters ?? new()),
-        ExtraProperties = new FlexibleObject(request.ExtraProperties ?? new())
+        ExtraProperties = new FlexibleObject(request.ExtraProperties ?? new()),
+        ExternalProcess = request.ExternalProcess
     };
 
     private static ReportResponse MapToResponse(Report entity)
@@ -92,7 +93,9 @@ public class CreateReportExportHandler : IRequestHandler<CreateReportExportComma
             entity.CreationDate,
             entity.ExpirationDate,
             ProcessState.Waiting,
-            null
+            null,
+            entity.ExternalProcess,
+            entity.ProcessMessage
         );
     }
 }

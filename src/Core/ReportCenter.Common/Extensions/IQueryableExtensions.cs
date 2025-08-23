@@ -1,5 +1,6 @@
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
+using System.Reflection.Metadata;
 using ReportCenter.Common.Queries;
 
 
@@ -40,9 +41,11 @@ public static class IQueryableExtensions
 
     public static IQueryable<TEntity> ApplySorting<TEntity>(
         this IQueryable<TEntity> query,
-        ISortableQuery request)
+        ISortableQuery request,
+        Func<IQueryable<TEntity>, IQueryable<TEntity>>? defaultSorting = null)
     {
         if (!string.IsNullOrEmpty(request?.SortBy)) return query.OrderBy(request.SortBy);
+        if (defaultSorting != null) return defaultSorting(query);
 
         return query;
     }

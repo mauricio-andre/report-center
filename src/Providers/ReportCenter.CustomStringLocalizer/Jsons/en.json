@@ -9,5 +9,6 @@
   "message:validation:valueAlreadyUse": "The value {0} is already in use",
   "message:validation:combinationValuesAlreadyUse": "The value combination {0} is already in use",
   "message:validation:ConnectionStringKeyNotFound": "The key {0} from the connections string of tenant {1} was not found",
-  "message:validation:duplicatedReport": "There is already a report being processed with this metadata"
+  "message:validation:duplicatedReport": "There is already a report being processed with this metadata",
+  "message:validation:reportIsNotReadyToDownload": "Unable to download this report"
 }

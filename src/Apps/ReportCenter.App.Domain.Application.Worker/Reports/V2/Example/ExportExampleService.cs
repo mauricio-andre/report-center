@@ -1,7 +1,6 @@
 using System.Globalization;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Spreadsheet;
-using Google.Protobuf.WellKnownTypes;
 using ReportCenter.App.GrpcServer.Methods.V1.Examples;
 using ReportCenter.Core.Reports.Entities;
 using ReportCenter.Core.Reports.Interfaces;
@@ -30,6 +29,7 @@ public class ExportExampleService : IReportService
 
         await using (var stream = _biggestReportExport.OpenWriteStream(report.FullFileName, "example", cancellationToken: cancellationToken))
         {
+            var DataStyleIndex = stream.AddDefaultExcelFormatData();
 
             stream.SetHeader([
                 new Cell
@@ -76,14 +76,14 @@ public class ExportExampleService : IReportService
                         },
                         new Cell
                         {
-                            // TODO Revisar forma de imprimir data
-                            CellValue = new CellValue(serverStreamingCall.ResponseStream.Current.Data.ToDateTime().ToOADate().ToString(CultureInfo.InvariantCulture)),
-                            DataType = new EnumValue<CellValues>(CellValues.Number)
+                            CellValue = new CellValue(serverStreamingCall.ResponseStream.Current.Data.ToDateTime().ToOADate()),
+                            StyleIndex = DataStyleIndex
                         }
                     ]);
                 }
+
+                await stream.SaveAsync();
             }
         }
-
     }
 }

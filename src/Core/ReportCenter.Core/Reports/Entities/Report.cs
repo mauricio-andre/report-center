@@ -14,13 +14,13 @@ public class Report
     [Required]
     public string Application { get; set; } = string.Empty;
     [Required]
-    public ReportType ReportType { get; set; }
+    public short Version { get; set; } = 1;
     [Required]
     public string DocumentName { get; set; } = string.Empty;
     [Required]
     public string DocumentKey { get; set; } = string.Empty;
     [Required]
-    public short Version { get; set; } = 1;
+    public ReportType ReportType { get; set; }
     [Required]
     public DateTimeOffset CreationDate { get; set; } = DateTimeOffset.Now;
     [Required]
@@ -33,21 +33,23 @@ public class Report
     public FlexibleObject ExtraProperties { get; set; } = new FlexibleObject();
     public TimeSpan? ProcessTimer { get; set; }
     public string FileExtension { get; set; } = "xlsx";
+    public bool ExternalProcess { get; set; } = false;
+    public string? ProcessMessage { get; set; }
 
     [NotMapped]
-    public string ComposeDocKey
+    public string ComposeWorkerKey
     {
         get
         => string.Concat(
             Domain,
             ":",
             Application,
-            ":",
-            ReportType.ToString(),
-            ":",
+            ":V",
             Version.ToString(),
             ":",
-            DocumentName);
+            DocumentName,
+            ":",
+            ReportType.ToString());
     }
 
     [NotMapped]
@@ -55,11 +57,11 @@ public class Report
     {
         get
         => Path.Combine(
-            Domain,
-            Application,
-            ReportType.ToString(),
-            Version.ToString(),
-            DocumentName,
+            Domain.ToLower(),
+            Application.ToLower(),
+            string.Concat("v", Version.ToString()),
+            DocumentName.ToLower(),
+            ReportType.ToString().ToLower(),
             string.Concat(Id, ".", FileExtension));
     }
 }
