@@ -10,5 +10,9 @@
   "message:validation:combinationValuesAlreadyUse": "The value combination {0} is already in use",
   "message:validation:ConnectionStringKeyNotFound": "The key {0} from the connections string of tenant {1} was not found",
   "message:validation:duplicatedReport": "There is already a report being processed with this metadata",
-  "message:validation:reportIsNotReadyToDownload": "Unable to download this report"
+  "message:validation:reportIsNotReadyToDownload": "Unable to download this report",
+  "message:validation:reportIsNotExternalProcess": "This action can only be performed on reports marked as external processing.",
+  "message:report:cancellationtokenTriggered": "Processing canceled, message requeued",
+  "message:report:connectionGrpcServerFail": "An error occurred while connecting to the data server, message requeued",
+  "message:report:connectionGrpcServerCriticalFail": "A critical error occurred while communicating with the data server, the report cannot be processed"
 }

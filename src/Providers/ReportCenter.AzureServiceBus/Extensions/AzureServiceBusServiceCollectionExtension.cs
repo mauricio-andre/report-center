@@ -7,7 +7,7 @@ namespace ReportCenter.AzureServiceBus.Extensions;
 
 public static class AzureServiceBusServiceCollectionExtension
 {
-    public static IServiceCollection AddAzureServiceBusConsumer(
+    public static IServiceCollection AddAzureServiceBusProvider(
         this IServiceCollection services,
         IConfiguration configuration,
         string connectionString)

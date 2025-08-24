@@ -8,6 +8,6 @@ public class DownloadReportValidator : AbstractValidator<DownloadReportQuery>
     public DownloadReportValidator()
     {
         RuleFor(prop => prop.Id)
-            .NotEmpty();
+            .NotNull();
     }
 }

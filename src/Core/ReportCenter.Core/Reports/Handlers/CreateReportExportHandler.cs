@@ -1,5 +1,7 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Localization;
+using ReportCenter.Common.Localization;
 using ReportCenter.Common.Providers.MessageQueues.Dtos;
 using ReportCenter.Common.Providers.MessageQueues.Enums;
 using ReportCenter.Common.Providers.MessageQueues.Interfaces;
@@ -20,19 +22,22 @@ public class CreateReportExportHandler : IRequestHandler<CreateReportExportComma
     private readonly IValidator<CreateReportExportCommand> _validator;
     private readonly ICurrentIdentity _currentIdentity;
     private readonly IMessagePublisher _messagePublisher;
+    private readonly IStringLocalizer<ReportCenterResource> _stringLocalizer;
 
     public CreateReportExportHandler(
         IReportRepository exportRepository,
         IMediator mediator,
         IValidator<CreateReportExportCommand> validator,
         ICurrentIdentity currentIdentity,
-        IMessagePublisher messagePublisher)
+        IMessagePublisher messagePublisher,
+        IStringLocalizer<ReportCenterResource> stringLocalizer)
     {
         _exportRepository = exportRepository;
         _mediator = mediator;
         _validator = validator;
         _currentIdentity = currentIdentity;
         _messagePublisher = messagePublisher;
+        _stringLocalizer = stringLocalizer;
     }
 
     public async Task<ReportResponse> Handle(CreateReportExportCommand request, CancellationToken cancellationToken)
@@ -79,7 +84,7 @@ public class CreateReportExportHandler : IRequestHandler<CreateReportExportComma
         ExternalProcess = request.ExternalProcess
     };
 
-    private static ReportResponse MapToResponse(Report entity)
+    private ReportResponse MapToResponse(Report entity)
     {
         return new ReportResponse(
             entity.Id,
@@ -95,7 +100,9 @@ public class CreateReportExportHandler : IRequestHandler<CreateReportExportComma
             ProcessState.Waiting,
             null,
             entity.ExternalProcess,
-            entity.ProcessMessage
+            string.IsNullOrEmpty(entity.ProcessMessage)
+                ? entity.ProcessMessage
+                : _stringLocalizer[entity.ProcessMessage]
         );
     }
 }

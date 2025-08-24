@@ -35,27 +35,65 @@ public class ReportExportController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{Id}")]
+    [HttpGet("{id}")]
     [ProducesResponseType<ReportCompleteResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Get(
-        [FromRoute] Guid Id)
+        [FromRoute] Guid id)
     {
-        var result = await _mediator.Send(new GetReportByIdQuery(Id));
+        var result = await _mediator.Send(new GetReportByIdQuery(id));
         return Ok(result);
     }
 
-    [HttpGet("{Id}/download")]
+    [HttpGet("{id}/downloads")]
     [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
-    [ProducesResponseType<ReportCompleteResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Download(
-        [FromRoute] Guid Id,
+        [FromRoute] Guid id,
         CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new DownloadReportQuery(Id), cancellationToken);
+        var result = await _mediator.Send(new DownloadReportQuery(id), cancellationToken);
         if (result == null)
             return NotFound();
 
-        return File(result, "application/octet-stream", "report-center-file.xlsx", enableRangeProcessing: true);
+        return File(result.Stream, "application/octet-stream", result.FileName, enableRangeProcessing: true);
+    }
+
+    [HttpPatch("{id}/external-process")]
+    [ProducesResponseType<ReportResponse>(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Create(
+        [FromRoute] Guid id,
+        [FromBody] UpdateReportExternalProcessStateDto request,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(
+            new UpdateReportStateCommand(
+                id,
+                request.ProcessState,
+                request.ProcessTimer,
+                request.ProcessMessage),
+            cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpPost("{id}/external-process/uploads")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType<ReportResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, Application.ProblemJson)]
+    public async Task<IActionResult> Create(
+        [FromRoute] Guid id,
+        IFormFile file,
+        [FromHeader(Name = "Process-Timer")] TimeSpan? processTimer,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(
+            new UploadReportExportExternalCommand(
+                id,
+                file.OpenReadStream(),
+                Path.GetExtension(file.FileName),
+                processTimer),
+            cancellationToken);
+
+        return Created();
     }
 
     [HttpGet("{domain}/{application}/{versionDoc}/{documentName}")]

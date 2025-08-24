@@ -15,7 +15,8 @@
     <ProjectReference Include="..\..\Providers\ReportCenter.OpenTelemetry\ReportCenter.OpenTelemetry.csproj" />
     <ProjectReference Include="..\..\Providers\ReportCenter.Swagger\ReportCenter.Swagger.csproj" />
     <ProjectReference Include="..\..\Providers\ReportCenter.Scalar\ReportCenter.Scalar.csproj" />
-    <ProjectReference Include="..\..\Providers\ReportCenter.LocalStorage\ReportCenter.LocalStorage.csproj" />
+    <ProjectReference Include="..\..\Providers\ReportCenter.LocalStorages\ReportCenter.LocalStorages.csproj" />
+    <ProjectReference Include="..\..\Providers\ReportCenter.AzureBlobStorages\ReportCenter.AzureBlobStorages.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />

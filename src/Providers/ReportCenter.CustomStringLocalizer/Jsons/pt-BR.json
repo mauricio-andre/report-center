@@ -10,5 +10,9 @@
   "message:validation:combinationValuesAlreadyUse": "A combinação de valores {0} já está sendo usado",
   "message:validation:ConnectionStringKeyNotFound": "A chave {0} da connections string do tenant {1} não foi localizada",
   "message:validation:duplicatedReport": "Já existe um relatórios em processamento com estes metadados",
-  "message:validation:reportIsNotReadyToDownload": "Não é possível fazer o download deste relatório"
+  "message:validation:reportIsNotReadyToDownload": "Não é possível fazer o download deste relatório",
+  "message:validation:reportIsNotExternalProcess": "Esta ação só pode ser realizada em reports marcados como processamento externo",
+  "message:report:cancellationtokenTriggered": "Processamento cancelado, mensagem recolocada na fila",
+  "message:report:connectionGrpcServerFail": "Ocorreu um erro na conexão com o servidor de dados, mensagem recolocada na fila",
+  "message:report:connectionGrpcServerCriticalFail": "Ocorreu um erro crítico na comunicação com o servidor de dados, o relatório não pode ser processado"
 }

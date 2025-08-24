@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Grpc.Core;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -28,7 +29,6 @@ public class MessageConsumerTemplate : BackgroundService
     private IMediator? _mediator;
     private IReportRepository? _reportRepository;
     private IReportServiceFactory? _reportServiceFactory;
-    protected virtual string ExportFileExtension => "xlsx";
 
     public MessageConsumerTemplate(
         ILogger<MessageConsumerTemplate> logger,
@@ -102,7 +102,7 @@ public class MessageConsumerTemplate : BackgroundService
 
             if (!IsMessageWithinProcessingScope(message))
             {
-                _logger.LogInformation("Message does not match Report Worker options");
+                _logger.LogInformation("Message does not match Report Worker options.");
                 return;
             }
 
@@ -133,7 +133,7 @@ public class MessageConsumerTemplate : BackgroundService
                 using (activity)
                 {
                     await _mediator!.Send(
-                        new UpdateStateReportCommand(message.Id, ProcessState.Processing),
+                        new UpdateReportStateCommand(message.Id, ProcessState.Processing),
                         cancellationToken);
 
                     var report = await _reportRepository!.GetByIdAsync(message.Id);
@@ -147,7 +147,7 @@ public class MessageConsumerTemplate : BackgroundService
 
                     stopwatch.Stop();
                     await _mediator.Send(
-                        new UpdateStateReportCommand(
+                        new UpdateReportStateCommand(
                             message.Id,
                             ProcessState.Success,
                             stopwatch.Elapsed),
@@ -157,17 +157,37 @@ public class MessageConsumerTemplate : BackgroundService
         }
         catch (OperationCanceledException ex)
         {
-            _logger.LogInformation(ex, "Processing stopped, rescheduling message");
+            _logger.LogInformation(ex, "Processing stopped, rescheduling message.");
             await _messagePublisher.PublishAsync(message);
             await _mediator!.Send(
-                new UpdateStateReportCommand(message.Id, ProcessState.Waiting, ProcessMessage: "Recolocado na fila"), // TODO: Colocar no arquivo de tradução
+                new UpdateReportStateCommand(message.Id, ProcessState.Waiting, ProcessMessage: "message:report:cancellationtokenTriggered"));
+        }
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, "An error occurred while connecting to the gRPC server.");
+
+            if (ex.Status.StatusCode == StatusCode.Unavailable
+                || ex.Status.StatusCode == StatusCode.DeadlineExceeded)
+            {
+                _logger.LogInformation(ex, "Putting message back into the processing queue");
+
+                await _messagePublisher.PublishAsync(message, cancellationToken);
+                await _mediator!.Send(
+                    new UpdateReportStateCommand(message.Id, ProcessState.Waiting, ProcessMessage: "message:report:connectionGrpcServerFail"),
+                    cancellationToken);
+
+                return;
+            }
+
+            await _mediator!.Send(
+                new UpdateReportStateCommand(message.Id, ProcessState.Error, ProcessMessage: "message:report:connectionGrpcServerCriticalFail"),
                 cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogCritical(ex, "An unhandled error occurred while processing the message");
+            _logger.LogCritical(ex, "An unhandled error occurred while processing the message.");
             await _mediator!.Send(
-                new UpdateStateReportCommand(message.Id, ProcessState.Error, ProcessMessage: ex.Message),
+                new UpdateReportStateCommand(message.Id, ProcessState.Error, ProcessMessage: ex.Message),
                 cancellationToken);
         }
     }
@@ -178,6 +198,6 @@ public class MessageConsumerTemplate : BackgroundService
             && (!_reportWorkerOptions.ReportType.HasValue
                 || _reportWorkerOptions.ReportType == 0
                 || _reportWorkerOptions.ReportType == message.ReportType)
-            && (!string.IsNullOrEmpty(_reportWorkerOptions.DocumentName)
+            && (string.IsNullOrEmpty(_reportWorkerOptions.DocumentName)
                 || _reportWorkerOptions.DocumentName!.Equals(message.DocumentName, StringComparison.InvariantCultureIgnoreCase));
 }

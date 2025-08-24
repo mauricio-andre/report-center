@@ -7,7 +7,7 @@ namespace ReportCenter.RabbitMQ.Extensions;
 
 public static class RabbitMQServiceCollectionExtension
 {
-    public static IServiceCollection AddRabbitMQConsumer(
+    public static IServiceCollection AddRabbitMQProvider(
         this IServiceCollection services,
         IConfiguration configuration,
         string connectionString)

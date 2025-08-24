@@ -15,15 +15,14 @@ using ReportCenter.Core.Reports.Services;
 using ReportCenter.Core.Templates.BackgroundServices;
 using ReportCenter.CustomConsoleFormatter.Extensions;
 using ReportCenter.CustomStringLocalizer.Extensions;
-using ReportCenter.LocalStorages.Services;
 using ReportCenter.Mongo.Extensions;
 using ReportCenter.MongoDB.Repositories;
 using ReportCenter.OpenTelemetry.Extensions;
 using ReportCenter.AzureServiceBus.Extensions;
 using ReportCenter.AzureServiceBus.Services;
-using Microsoft.AspNetCore.Mvc;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml;
+using ReportCenter.AzureBlobStorages.Services;
+using ReportCenter.AzureBlobStorages.Extensions;
+using ReportCenter.RabbitMQ.Extensions;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -31,8 +30,6 @@ builder.Services
     .AddMongoCoreDbContext(
         builder.Configuration.GetConnectionString("CoreDbContext")!,
         builder.Configuration.GetValue<string>("MongoDBName")!)
-    // .AddRabbitMQConsumer(builder.Configuration, builder.Configuration.GetConnectionString("RabbitMQ")!)
-    .AddAzureServiceBusConsumer(builder.Configuration, builder.Configuration.GetConnectionString("ServiceBus")!)
     .AddMediatR(config => config.RegisterServicesFromAssemblyContaining<CoreDbContext>())
     .Scan(scan => scan.FromAssembliesOf(typeof(CoreDbContext))
         .AddClasses(classes => classes.AssignableTo(typeof(AbstractValidator<>)))
@@ -48,7 +45,8 @@ builder.Services
     .AddScoped<ICurrentIdentity, CurrentIdentity>()
     .AddScoped<IReportRepository, ExportRepository>()
     .AddSingleton<IReportServiceFactory, ReportServiceFactory>()
-    .AddSingleton<IStorageService, LocalStorage>()
+    // .AddSingleton<IStorageService, LocalStorage>()
+    .AddSingleton<IStorageService, AzureBlobStorage>()
     .AddSingleton<IMessagePublisher, AzureServiceBusPublisher>()
     .AddSingleton<IMessageConsumer, AzureServiceBusConsumer>()
     // .AddSingleton<IMessagePublisher, RabbitMQPublisher>()
@@ -65,6 +63,9 @@ builder.Services
 // Configure providers
 builder.Services.AddCustomStringLocalizerProvider();
 builder.Services.AddCustomConsoleFormatterProvider<LoggerPropertiesService>();
+builder.Services.AddAzureBlobStorageProvider(builder.Configuration, builder.Configuration.GetConnectionString("BlobStorage")!);
+// builder.Services.AddRabbitMQProvider(builder.Configuration, builder.Configuration.GetConnectionString("RabbitMQ")!);
+builder.Services.AddAzureServiceBusProvider(builder.Configuration, builder.Configuration.GetConnectionString("ServiceBus")!);
 builder.AddOpenTelemetryProvider();
 
 // Configure options

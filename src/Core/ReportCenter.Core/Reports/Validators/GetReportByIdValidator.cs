@@ -8,6 +8,6 @@ public class GetReportByIdValidator : AbstractValidator<GetReportByIdQuery>
     public GetReportByIdValidator()
     {
         RuleFor(prop => prop.Id)
-            .NotEmpty();
+            .NotNull();
     }
 }

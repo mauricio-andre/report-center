@@ -3,7 +3,7 @@ using ReportCenter.Common.Providers.MessageQueues.Enums;
 
 namespace ReportCenter.Core.Reports.Commands;
 
-public record UpdateStateReportCommand(
+public record UpdateReportExternalProcessStateCommand(
     Guid Id,
     ProcessState ProcessState,
     TimeSpan? ProcessTimer = null,

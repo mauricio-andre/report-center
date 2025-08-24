@@ -7,23 +7,22 @@ using ReportCenter.Common.Localization;
 using ReportCenter.Common.Providers.MessageQueues.Enums;
 using ReportCenter.Common.Providers.Storage.Interfaces;
 using ReportCenter.Core.Data;
+using ReportCenter.Core.Reports.Commands;
 using ReportCenter.Core.Reports.Entities;
-using ReportCenter.Core.Reports.Queries;
-using ReportCenter.Core.Reports.Responses;
 
 namespace ReportCenter.Core.Reports.Handlers;
 
-public class DownloadReportHandler : IRequestHandler<DownloadReportQuery, DownloadReportResponse?>
+public class UploadReportExportExternalHandler : IRequestHandler<UploadReportExportExternalCommand>
 {
     private readonly IStorageService _storageService;
     private readonly CoreDbContext _coreDbContext;
-    private readonly IValidator<DownloadReportQuery> _validator;
+    private readonly IValidator<UploadReportExportExternalCommand> _validator;
     private readonly IStringLocalizer<ReportCenterResource> _stringLocalizer;
 
-    public DownloadReportHandler(
+    public UploadReportExportExternalHandler(
         IStorageService storageService,
         IDbContextFactory<CoreDbContext> dbContextFactory,
-        IValidator<DownloadReportQuery> validator,
+        IValidator<UploadReportExportExternalCommand> validator,
         IStringLocalizer<ReportCenterResource> stringLocalizer)
     {
         _coreDbContext = dbContextFactory.CreateDbContext();
@@ -32,25 +31,29 @@ public class DownloadReportHandler : IRequestHandler<DownloadReportQuery, Downlo
         _stringLocalizer = stringLocalizer;
     }
 
-    public async Task<DownloadReportResponse?> Handle(DownloadReportQuery request, CancellationToken cancellationToken)
+    public async Task Handle(UploadReportExportExternalCommand request, CancellationToken cancellationToken)
     {
         await _validator.ValidateAndThrowAsync(request, cancellationToken);
 
         var report = await _coreDbContext.Reports
             .Where(report => report.Id == request.Id)
-            .AsNoTracking()
             .FirstOrDefaultAsync();
 
         if (report == null)
             throw new EntityNotFoundException(_stringLocalizer, nameof(Report), request.Id.ToString());
 
-        if (report.ProcessState != ProcessState.Success)
-            throw new ReportIsNotReadyToDownloadException(_stringLocalizer);
+        if (report.ProcessState == ProcessState.Success)
+            throw new DuplicatedEntityException(_stringLocalizer, nameof(Report));
 
-        var stream = await _storageService.OpenReadAsync(report.FullFileName, cancellationToken);
-        if (stream == null)
-            return null;
+        if (!report.ExternalProcess)
+            throw new ReportIsNotExternalProcessException(_stringLocalizer);
 
-        return new DownloadReportResponse(stream, string.Concat(report.Id, ".", report.FileExtension));
+        report.FileExtension = request.FileExtension ?? report.FileExtension;
+        report.ProcessTimer = request.ProcessTimer;
+        report.ProcessState = ProcessState.Success;
+
+        await _storageService.SaveAsync(report.FullFileName, request.Stream, cancellationToken: cancellationToken);
+        _coreDbContext.Reports.Update(report);
+        await _coreDbContext.SaveChangesAsync();
     }
 }

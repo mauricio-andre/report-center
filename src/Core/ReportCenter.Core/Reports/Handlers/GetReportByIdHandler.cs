@@ -39,7 +39,7 @@ public class GetReportByIdHandler : IRequestHandler<GetReportByIdQuery, ReportCo
         return MapToResponse(entity);
     }
 
-    private static ReportCompleteResponse MapToResponse(Report entity) =>
+    private ReportCompleteResponse MapToResponse(Report entity) =>
         new ReportCompleteResponse(
             entity.Id,
             entity.Domain,
@@ -57,6 +57,8 @@ public class GetReportByIdHandler : IRequestHandler<GetReportByIdQuery, ReportCo
             entity.FileExtension,
             entity.ProcessTimer,
             entity.ExternalProcess,
-            entity.ProcessMessage
+            string.IsNullOrEmpty(entity.ProcessMessage)
+                ? entity.ProcessMessage
+                : _stringLocalizer[entity.ProcessMessage]
         );
 }

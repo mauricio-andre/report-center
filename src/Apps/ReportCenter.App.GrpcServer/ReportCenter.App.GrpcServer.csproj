@@ -17,6 +17,7 @@
     <ProjectReference Include="..\..\Providers\ReportCenter.OpenTelemetry\ReportCenter.OpenTelemetry.csproj" />
     <ProjectReference Include="..\..\Providers\ReportCenter.RabbitMQ\ReportCenter.RabbitMQ.csproj" />
     <ProjectReference Include="..\..\Providers\ReportCenter.AzureServiceBus\ReportCenter.AzureServiceBus.csproj" />
+    <ProjectReference Include="..\..\Providers\ReportCenter.LocalStorages\ReportCenter.LocalStorages.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" Version="2.64.0" />
