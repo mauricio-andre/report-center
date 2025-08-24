@@ -59,7 +59,7 @@ public class ReportExportController : ControllerBase
 
     [HttpPatch("{id}/external-process")]
     [ProducesResponseType<ReportResponse>(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> Create(
+    public async Task<IActionResult> UpdateExternal(
         [FromRoute] Guid id,
         [FromBody] UpdateReportExternalProcessStateDto request,
         CancellationToken cancellationToken)
