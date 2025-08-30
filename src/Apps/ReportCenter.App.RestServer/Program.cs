@@ -67,9 +67,11 @@ public class Program
             .AddSingleton(_ => new ReportCenterActivitySource(builder.Configuration.GetValue<string>("ServiceName")!))
             .AddScoped<IReportRepository, ExportRepository>()
             .AddSingleton<IMessagePublisher, AzureServiceBusPublisher>()
+            .AddSingleton<IMessageConsumer, AzureServiceBusConsumer>()
             .AddSingleton<IStorageService, AzureBlobStorage>();
             // .AddSingleton<IStorageService, LocalStorage>();
             // .AddSingleton<IMessagePublisher, RabbitMQPublisher>();
+            // .AddSingleton<IMessageConsumer, RabbitMQConsumer>();
 
         // Configuration string location
         builder.Services.Configure<RequestLocalizationOptions>(options =>

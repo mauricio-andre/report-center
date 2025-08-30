@@ -4,5 +4,8 @@ namespace ReportCenter.Common.Providers.MessageQueues.Interfaces;
 
 public interface IMessagePublisher
 {
-    public Task PublishAsync(ReportMessageDto message, CancellationToken cancellationToken = default);
+    public Task PublishProcessesAsync(ReportMessageDto message, CancellationToken cancellationToken = default);
+    public Task PublishProgressAsync(
+        ReportMessageProgressDto message,
+        CancellationToken cancellationToken = default);
 }

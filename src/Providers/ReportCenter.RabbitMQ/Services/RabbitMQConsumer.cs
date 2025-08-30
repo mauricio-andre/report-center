@@ -45,7 +45,7 @@ public sealed class RabbitMQConsumer : IMessageConsumer
             await ReceivedAsync(eventArgs, cancellationToken);
         };
 
-        await _channel!.BasicConsumeAsync(_rabbitMqOptions.QueueName, autoAck: false, consumer, cancellationToken);
+        await _channel!.BasicConsumeAsync(_rabbitMqOptions.ProcessesQueueName, autoAck: false, consumer, cancellationToken);
         _logger.LogInformation("Waiting for messages...");
     }
 

@@ -32,7 +32,7 @@ public sealed class AzureServiceBusConsumer : IMessageConsumer
     public Task StartAsync(CancellationToken cancellationToken = default)
     {
         _processor = _client.CreateProcessor(
-            _options.TopicName,
+            _options.ProcessesTopicName,
             _options.SubscriptionName,
             new ServiceBusProcessorOptions
             {
@@ -64,7 +64,7 @@ public sealed class AzureServiceBusConsumer : IMessageConsumer
         await _processor.StartProcessingAsync(cancellationToken);
 
         _logger.LogInformation("Waiting for messages on Topic {Topic}/{Subscription}...",
-            _options.TopicName, _options.SubscriptionName);
+            _options.ProcessesTopicName, _options.SubscriptionName);
     }
 
     public ReportMessageDto DeserializeMessage(object args)

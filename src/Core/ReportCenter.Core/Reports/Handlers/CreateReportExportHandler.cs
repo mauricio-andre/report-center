@@ -54,7 +54,7 @@ public class CreateReportExportHandler : IRequestHandler<CreateReportExportComma
         var entity = MapToEntity(request);
 
         await _exportRepository.InsertAsync(entity);
-        await _messagePublisher.PublishAsync(new ReportMessageDto(
+        await _messagePublisher.PublishProcessesAsync(new ReportMessageDto(
             Id: entity.Id,
             Domain: entity.Domain,
             Application: entity.Application,

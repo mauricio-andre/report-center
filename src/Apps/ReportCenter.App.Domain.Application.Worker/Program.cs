@@ -22,7 +22,6 @@ using ReportCenter.AzureServiceBus.Extensions;
 using ReportCenter.AzureServiceBus.Services;
 using ReportCenter.AzureBlobStorages.Services;
 using ReportCenter.AzureBlobStorages.Extensions;
-using ReportCenter.RabbitMQ.Extensions;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -49,8 +48,8 @@ builder.Services
     .AddSingleton<IStorageService, AzureBlobStorage>()
     .AddSingleton<IMessagePublisher, AzureServiceBusPublisher>()
     .AddSingleton<IMessageConsumer, AzureServiceBusConsumer>()
-    // .AddSingleton<IMessagePublisher, RabbitMQPublisher>()
-    // .AddSingleton<IMessageConsumer, RabbitMQConsumer>()
+    // .AddScoped<IMessagePublisher, RabbitMQPublisher>()
+    // .AddScoped<IMessageConsumer, RabbitMQConsumer>()
     .AddSingleton<IBiggestReportExport, BiggestReportExport>()
     .AddSingleton<ReportCenter.App.Domain.Application.Worker.Reports.V1.Example.ExportExampleService>()
     .AddSingleton<ReportCenter.App.Domain.Application.Worker.Reports.V2.Example.ExportExampleService>();

@@ -83,7 +83,7 @@ public class MessageConsumerTemplate : BackgroundService
     protected async Task ReceivedAsync(dynamic args, CancellationToken cancellationToken)
     {
         ReportMessageDto message;
-        string? transactionId;
+        string? transactionId = null;
 
         try
         {
@@ -96,45 +96,43 @@ public class MessageConsumerTemplate : BackgroundService
             return;
         }
 
-        try
+        await _messageConsumer.CompleteMessage(args, cancellationToken);
+
+        if (!IsMessageWithinProcessingScope(message))
         {
-            await _messageConsumer.CompleteMessage(args, cancellationToken);
+            _logger.LogInformation("Message does not match Report Worker options.");
+            return;
+        }
 
-            if (!IsMessageWithinProcessingScope(message))
+        transactionId = await _messageConsumer.GetParentTransactionId(args);
+
+        using (_logger.BeginScope(new ReportDocumentKeysLoggerRecord(
+            message.ReportType.ToString(),
+            message.DocumentName,
+            message.DocumentKey,
+            message.Version)))
+        {
+            var activity = !string.IsNullOrEmpty(transactionId) && ActivityContext.TryParse(transactionId, null, out var activityContext)
+                ? _reportCenterActivitySource.ActivitySourceDefault.StartActivity(
+                    "StartMessageProcess",
+                    ActivityKind.Consumer,
+                    activityContext)
+                : _reportCenterActivitySource.ActivitySourceDefault.StartActivity(
+                    "StartMessageProcess",
+                    ActivityKind.Consumer);
+
+            activity?.AddTag(nameof(ReportMessageDto.Domain), message.Domain);
+            activity?.AddTag(nameof(ReportMessageDto.Application), message.Application);
+            activity?.AddTag(nameof(ReportMessageDto.ReportType), message.ReportType.ToString());
+            activity?.AddTag(nameof(ReportMessageDto.DocumentName), message.DocumentName);
+            activity?.AddTag(nameof(ReportMessageDto.DocumentKey), message.DocumentKey);
+            activity?.AddTag(nameof(ReportMessageDto.Version), message.Version);
+
+            using (activity)
             {
-                _logger.LogInformation("Message does not match Report Worker options.");
-                return;
-            }
-
-            transactionId = await _messageConsumer.GetParentTransactionId(args);
-
-            using (_logger.BeginScope(new ReportDocumentKeysLoggerRecord(
-                message.ReportType.ToString(),
-                message.DocumentName,
-                message.DocumentKey,
-                message.Version)))
-            {
-                var activity = string.IsNullOrEmpty(transactionId)
-                    ? _reportCenterActivitySource.ActivitySourceDefault.StartActivity(
-                        "StartMessageProcess",
-                        ActivityKind.Consumer)
-                    : _reportCenterActivitySource.ActivitySourceDefault.StartActivity(
-                        "StartMessageProcess",
-                        ActivityKind.Consumer,
-                        ActivityContext.Parse(transactionId!, null));
-
-                activity?.AddTag(nameof(ReportMessageDto.Domain), message.Domain);
-                activity?.AddTag(nameof(ReportMessageDto.Application), message.Application);
-                activity?.AddTag(nameof(ReportMessageDto.ReportType), message.ReportType.ToString());
-                activity?.AddTag(nameof(ReportMessageDto.DocumentName), message.DocumentName);
-                activity?.AddTag(nameof(ReportMessageDto.DocumentKey), message.DocumentKey);
-                activity?.AddTag(nameof(ReportMessageDto.Version), message.Version);
-
-                using (activity)
+                try
                 {
-                    await _mediator!.Send(
-                        new UpdateReportStateCommand(message.Id, ProcessState.Processing),
-                        cancellationToken);
+                    await StateProcessingAsync(message, cancellationToken);
 
                     var report = await _reportRepository!.GetByIdAsync(message.Id);
 
@@ -146,50 +144,120 @@ public class MessageConsumerTemplate : BackgroundService
                     await service.HandleAsync(report!, cancellationToken);
 
                     stopwatch.Stop();
-                    await _mediator.Send(
-                        new UpdateReportStateCommand(
-                            message.Id,
-                            ProcessState.Success,
-                            stopwatch.Elapsed),
-                        cancellationToken);
+
+                    await StateSuccessAsync(message, stopwatch, cancellationToken);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    _logger.LogInformation(ex, "Processing stopped, rescheduling message.");
+                    await StateErrorAsync(message, "message:report:cancellationtokenTriggered", true);
+                }
+                catch (RpcException ex)
+                {
+                    _logger.LogError(ex, "An error occurred while connecting to the gRPC server.");
+
+                    if (ex.Status.StatusCode == StatusCode.Unavailable
+                        || ex.Status.StatusCode == StatusCode.DeadlineExceeded)
+                    {
+                        _logger.LogInformation(ex, "Putting message back into the processing queue");
+                        await StateErrorAsync(message, "message:report:connectionGrpcServerFail", true, cancellationToken);
+                        return;
+                    }
+
+                    await StateErrorAsync(message, "message:report:connectionGrpcServerCriticalFail", false, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogCritical(ex, "An unhandled error occurred while processing the message.");
+                    await StateErrorAsync(message, ex.Message, false, cancellationToken);
                 }
             }
         }
-        catch (OperationCanceledException ex)
-        {
-            _logger.LogInformation(ex, "Processing stopped, rescheduling message.");
-            await _messagePublisher.PublishAsync(message);
-            await _mediator!.Send(
-                new UpdateReportStateCommand(message.Id, ProcessState.Waiting, ProcessMessage: "message:report:cancellationtokenTriggered"));
-        }
-        catch (RpcException ex)
-        {
-            _logger.LogError(ex, "An error occurred while connecting to the gRPC server.");
+    }
 
-            if (ex.Status.StatusCode == StatusCode.Unavailable
-                || ex.Status.StatusCode == StatusCode.DeadlineExceeded)
-            {
-                _logger.LogInformation(ex, "Putting message back into the processing queue");
+    private async Task StateProcessingAsync(ReportMessageDto message, CancellationToken cancellationToken)
+    {
+        await _mediator!.Send(
+            new UpdateReportStateCommand(message.Id, ProcessState.Processing),
+            cancellationToken);
 
-                await _messagePublisher.PublishAsync(message, cancellationToken);
-                await _mediator!.Send(
-                    new UpdateReportStateCommand(message.Id, ProcessState.Waiting, ProcessMessage: "message:report:connectionGrpcServerFail"),
-                    cancellationToken);
+        await _messagePublisher.PublishProgressAsync(
+            new ReportMessageProgressDto(
+                message.Id,
+                message.Domain,
+                message.Application,
+                message.Version,
+                message.DocumentName,
+                message.ReportType,
+                message.DocumentKey,
+                ProcessState.Processing,
+                null,
+                null,
+                false
+            ),
+            cancellationToken: cancellationToken
+        );
+    }
 
-                return;
-            }
+    private async Task StateSuccessAsync(ReportMessageDto message, Stopwatch stopwatch, CancellationToken cancellationToken)
+    {
+        await _mediator!.Send(
+            new UpdateReportStateCommand(
+                message.Id,
+                ProcessState.Success,
+                stopwatch.Elapsed),
+            cancellationToken);
 
-            await _mediator!.Send(
-                new UpdateReportStateCommand(message.Id, ProcessState.Error, ProcessMessage: "message:report:connectionGrpcServerCriticalFail"),
-                cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogCritical(ex, "An unhandled error occurred while processing the message.");
-            await _mediator!.Send(
-                new UpdateReportStateCommand(message.Id, ProcessState.Error, ProcessMessage: ex.Message),
-                cancellationToken);
-        }
+        await _messagePublisher.PublishProgressAsync(
+            new ReportMessageProgressDto(
+                message.Id,
+                message.Domain,
+                message.Application,
+                message.Version,
+                message.DocumentName,
+                message.ReportType,
+                message.DocumentKey,
+                ProcessState.Success,
+                stopwatch.Elapsed,
+                null,
+                false
+            ),
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task StateErrorAsync(
+        ReportMessageDto message,
+        string messageException,
+        bool requeue,
+        CancellationToken cancellationToken = default)
+    {
+        if (requeue)
+            await _messagePublisher.PublishProcessesAsync(message, cancellationToken);
+
+        await _mediator!.Send(
+            new UpdateReportStateCommand(
+                message.Id,
+                ProcessState.Waiting,
+                ProcessMessage: messageException),
+            cancellationToken);
+
+        await _messagePublisher.PublishProgressAsync(
+            new ReportMessageProgressDto(
+                message.Id,
+                message.Domain,
+                message.Application,
+                message.Version,
+                message.DocumentName,
+                message.ReportType,
+                message.DocumentKey,
+                ProcessState.Error,
+                null,
+                messageException,
+                requeue
+            ),
+            cancellationToken
+        );
     }
 
     private bool IsMessageWithinProcessingScope(ReportMessageDto message)

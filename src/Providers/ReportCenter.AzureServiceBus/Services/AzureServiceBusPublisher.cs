@@ -9,23 +9,21 @@ using ReportCenter.Common.Providers.MessageQueues.Interfaces;
 
 namespace ReportCenter.AzureServiceBus.Services;
 
-public class AzureServiceBusPublisher : IMessagePublisher
+public class AzureServiceBusPublisher : IMessagePublisher, IAsyncDisposable
 {
-    private readonly ServiceBusClient _client;
-    private readonly AzureServiceBusOptions _options;
+    private readonly ServiceBusSender _processesSender;
+    private readonly ServiceBusSender _ProgressSender;
 
     public AzureServiceBusPublisher(
         ServiceBusClient client,
         IOptions<AzureServiceBusOptions> options)
     {
-        _client = client;
-        _options = options.Value;
+        _processesSender = client.CreateSender(options.Value.ProcessesTopicName);
+        _ProgressSender = client.CreateSender(options.Value.ProgressTopicName);
     }
 
-    public async Task PublishAsync(ReportMessageDto message, CancellationToken cancellationToken = default)
+    public async Task PublishProcessesAsync(ReportMessageDto message, CancellationToken cancellationToken = default)
     {
-        ServiceBusSender sender = _client.CreateSender(_options.TopicName);
-
         var messageObject = new MessageBodyDto(message.Id);
         var body = JsonSerializer.SerializeToUtf8Bytes(messageObject);
 
@@ -43,6 +41,42 @@ public class AzureServiceBusPublisher : IMessagePublisher
             }
         };
 
-        await sender.SendMessageAsync(serviceBusMessage, cancellationToken);
+        await _processesSender.SendMessageAsync(serviceBusMessage, cancellationToken);
+    }
+
+    public async Task PublishProgressAsync(
+        ReportMessageProgressDto message,
+        CancellationToken cancellationToken = default)
+    {
+        var messageObject = new MessageProgressBodyDto(
+            message.Id,
+            message.ProcessTimer,
+            message.ProcessMessage,
+            message.Requeue);
+
+        var body = JsonSerializer.SerializeToUtf8Bytes(messageObject);
+
+        var serviceBusMessage = new ServiceBusMessage(body)
+        {
+            ApplicationProperties =
+            {
+                [nameof(ReportMessageProgressDto.Domain)] = message.Domain,
+                [nameof(ReportMessageProgressDto.Application)] = message.Application,
+                [nameof(ReportMessageProgressDto.ReportType)] = message.ReportType.GetHashCode(),
+                [nameof(ReportMessageProgressDto.DocumentName)] = message.DocumentName,
+                [nameof(ReportMessageProgressDto.DocumentKey)] = message.DocumentKey,
+                [nameof(ReportMessageProgressDto.Version)] = message.Version,
+                [nameof(ReportMessageProgressDto.ProcessState)] = (short)message.ProcessState,
+                ["TransactionId"] = Activity.Current?.Id
+            }
+        };
+
+        await _ProgressSender.SendMessageAsync(serviceBusMessage, cancellationToken);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _processesSender.DisposeAsync();
+        await _ProgressSender.DisposeAsync();
     }
 }

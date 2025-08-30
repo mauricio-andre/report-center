@@ -4,5 +4,6 @@ public class RabbitMQOptions
 {
     public static readonly string Position = "RabbitMQ";
 
-    public string QueueName { get; set; } = string.Empty;
+    public string ProgressQueueName { get; set; } = string.Empty;
+    public string ProcessesQueueName { get; set; } = string.Empty;
 }
