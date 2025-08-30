@@ -238,7 +238,7 @@ public class MessageConsumerTemplate : BackgroundService
         await _mediator!.Send(
             new UpdateReportStateCommand(
                 message.Id,
-                ProcessState.Waiting,
+                requeue ? ProcessState.Waiting : ProcessState.Error,
                 ProcessMessage: messageException),
             cancellationToken);
 
