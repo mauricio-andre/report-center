@@ -7,17 +7,8 @@ public class SearchReportFromOrigemValidator : AbstractValidator<SearchReportFro
 {
     public SearchReportFromOrigemValidator()
     {
-        RuleFor(prop => prop.Domain)
-            .NotEmpty();
-
-        RuleFor(prop => prop.Application)
-            .NotEmpty();
-
-        RuleFor(prop => (int)prop.version)
+        RuleFor(prop => prop.Skip)
             .GreaterThan(0);
-
-        RuleFor(prop => prop.DocumentName)
-            .NotEmpty();
 
         RuleFor(prop => prop.Take)
             .GreaterThan(0)

@@ -32,7 +32,7 @@ public class Report
     public FlexibleObject Filters { get; set; } = new FlexibleObject();
     public FlexibleObject ExtraProperties { get; set; } = new FlexibleObject();
     public TimeSpan? ProcessTimer { get; set; }
-    public string FileExtension { get; set; } = "xlsx";
+    public string FileExtension { get; set; } = ".xlsx";
     public bool ExternalProcess { get; set; } = false;
     public string? ProcessMessage { get; set; }
 
@@ -62,6 +62,6 @@ public class Report
             string.Concat("v", Version.ToString()),
             DocumentName.ToLower(),
             ReportType.ToString().ToLower(),
-            string.Concat(Id, ".", FileExtension));
+            string.Concat(Id, FileExtension));
     }
 }

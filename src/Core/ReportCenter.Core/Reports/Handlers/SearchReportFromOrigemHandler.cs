@@ -42,13 +42,23 @@ public class SearchReportFromOrigemHandler : IRequestHandler<SearchReportFromOri
     private IQueryable<Report> CreateSearchQuery(SearchReportFromOrigemQuery request)
     {
         return _coreDbContext.Reports
-            .Where(entity => entity.Domain.ToLower() == request.Domain.ToLower())
-            .Where(entity => entity.Application.ToLower() == request.Application.ToLower())
-            .Where(entity => entity.DocumentName.ToLower() == request.DocumentName.ToLower())
-            .Where(entity => entity.ReportType == request.ReportType)
-            .Where(entity => entity.Version == request.version)
             .WhereIf(
-                !request.IncludeExpiredFiles,
+                !string.IsNullOrEmpty(request.Domain),
+                entity => entity.Domain.ToLower() == request.Domain!.ToLower())
+            .WhereIf(
+                !string.IsNullOrEmpty(request.Application),
+                entity => entity.Application.ToLower() == request.Application!.ToLower())
+            .WhereIf(
+                !string.IsNullOrEmpty(request.DocumentName),
+                entity => entity.DocumentName.ToLower() == request.DocumentName!.ToLower())
+            .WhereIf(
+                request.ReportType.HasValue,
+                entity => entity.ReportType == request.ReportType)
+            .WhereIf(
+                request.version.HasValue,
+                entity => entity.Version == request.version)
+            .WhereIf(
+                request.IncludeExpiredFiles,
                 entity => entity.ExpirationDate >= DateTimeOffset.Now)
             .WhereIf(
                 !string.IsNullOrEmpty(request.DocumentKeyComposition)

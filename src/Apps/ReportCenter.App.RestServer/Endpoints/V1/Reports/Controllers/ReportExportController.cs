@@ -3,7 +3,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ReportCenter.App.RestServer.Endpoints.V1.Reports.Dtos;
-using ReportCenter.App.RestServer.Extensions;
 using ReportCenter.Common.Providers.MessageQueues.Enums;
 using ReportCenter.Core.Reports.Commands;
 using ReportCenter.Core.Reports.Queries;
@@ -27,7 +26,7 @@ public class ReportExportController : ControllerBase
     }
 
     [HttpPost]
-    [ProducesResponseType<ReportResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ReportCompleteResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, Application.ProblemJson)]
     public async Task<IActionResult> Create([FromBody] CreateReportExportCommand request)
     {
@@ -37,6 +36,7 @@ public class ReportExportController : ControllerBase
 
     [HttpGet("{id}")]
     [ProducesResponseType<ReportCompleteResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, Application.ProblemJson)]
     public async Task<IActionResult> Get(
         [FromRoute] Guid id)
     {
@@ -44,8 +44,31 @@ public class ReportExportController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{domain}/{application}/{versionDoc}/{documentName}/{documentKey}")]
+    [ProducesResponseType<ReportCompleteResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, Application.ProblemJson)]
+    public async Task<IActionResult> GetFromOrigem(
+        [FromRoute] string domain,
+        [FromRoute] string application,
+        [FromRoute] short versionDoc,
+        [FromRoute] string documentName,
+        [FromRoute] string documentKey)
+    {
+        var result = await _mediator.Send(new GetReportByKeysQuery(
+            domain,
+            application,
+            versionDoc,
+            documentName,
+            ReportType.Export,
+            documentKey
+        ));
+
+        return Ok(result);
+    }
+
     [HttpGet("{id}/downloads")]
-    [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+    [ProducesResponseType<FileStreamResult>(StatusCodes.Status200OK, "application/octet-stream")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, Application.ProblemJson)]
     public async Task<IActionResult> Download(
         [FromRoute] Guid id,
         CancellationToken cancellationToken)
@@ -57,29 +80,12 @@ public class ReportExportController : ControllerBase
         return File(result.Stream, "application/octet-stream", result.FileName, enableRangeProcessing: true);
     }
 
-    [HttpPatch("{id}/external-process")]
-    [ProducesResponseType<ReportResponse>(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> UpdateExternal(
-        [FromRoute] Guid id,
-        [FromBody] UpdateReportExternalProcessStateDto request,
-        CancellationToken cancellationToken)
-    {
-        await _mediator.Send(
-            new UpdateReportStateCommand(
-                id,
-                request.ProcessState,
-                request.ProcessTimer,
-                request.ProcessMessage),
-            cancellationToken);
-
-        return NoContent();
-    }
-
     [HttpPost("{id}/external-process/uploads")]
     [Consumes("multipart/form-data")]
-    [ProducesResponseType<ReportResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, Application.ProblemJson)]
-    public async Task<IActionResult> Create(
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, Application.ProblemJson)]
+    public async Task<IActionResult> UploadExternalFile(
         [FromRoute] Guid id,
         IFormFile file,
         [FromHeader(Name = "Process-Timer")] TimeSpan? processTimer,
@@ -96,66 +102,22 @@ public class ReportExportController : ControllerBase
         return Created();
     }
 
-    [HttpGet("{domain}/{application}/{versionDoc}/{documentName}")]
-    [ProducesResponseType<IList<ReportResponse>>(StatusCodes.Status200OK)]
-    [ProducesResponseType<IList<ReportResponse>>(StatusCodes.Status206PartialContent)]
-    public async Task<IActionResult> GetFromOrigem(
-        [FromRoute] string domain,
-        [FromRoute] string application,
-        [FromRoute] string documentName,
-        [FromRoute] short versionDoc,
-        [FromQuery] SearchReportFromOrigemRequestDto request)
+    [HttpPatch("{id}/external-process")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, Application.ProblemJson)]
+    public async Task<IActionResult> UpdateExternalState(
+        [FromRoute] Guid id,
+        [FromBody] UpdateReportExternalProcessStateDto request,
+        CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new SearchReportFromOrigemQuery(
-            domain,
-            application,
-            versionDoc,
-            documentName,
-            ReportType.Export,
-            request.DocumentKeyComposition,
-            request.SortBy,
-            request.Skip,
-            request.Take,
-            request.IncludeExpiredFiles
-        ));
+        await _mediator.Send(
+            new UpdateReportStateCommand(
+                id,
+                request.ProcessState,
+                request.ProcessTimer,
+                request.ProcessMessage),
+            cancellationToken);
 
-        var list = await result.Items.ToListAsync();
-
-        Response.Headers.AddContentRangeHeaders(request.Skip, request.Take, result.TotalCount);
-
-        return StatusCode(
-            result.TotalCount == list.Count
-                ? StatusCodes.Status200OK
-                : StatusCodes.Status206PartialContent,
-            list
-        );
-    }
-
-    [HttpGet("{domain}/{application}/{versionDoc}/{documentName}/{documentKey}")]
-    [ProducesResponseType<ReportResponse>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetFromOrigem(
-        [FromRoute] string domain,
-        [FromRoute] string application,
-        [FromRoute] short versionDoc,
-        [FromRoute] string documentName,
-        [FromRoute] string documentKey)
-    {
-        var result = await _mediator.Send(new SearchReportFromOrigemQuery(
-            domain,
-            application,
-            versionDoc,
-            documentName,
-            ReportType.Export,
-            documentKey,
-            null,
-            0,
-            1,
-            false
-        ));
-
-        var item = await result.Items.FirstOrDefaultAsync();
-        return item == null
-            ? NotFound()
-            : Ok(item);
+        return NoContent();
     }
 }

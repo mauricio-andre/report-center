@@ -51,6 +51,6 @@ public class DownloadReportHandler : IRequestHandler<DownloadReportQuery, Downlo
         if (stream == null)
             return null;
 
-        return new DownloadReportResponse(stream, string.Concat(report.Id, ".", report.FileExtension));
+        return new DownloadReportResponse(stream, string.Concat(report.Id, report.FileExtension));
     }
 }

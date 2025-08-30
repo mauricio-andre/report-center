@@ -15,7 +15,7 @@ using ReportCenter.Core.Reports.Responses;
 
 namespace ReportCenter.Core.Reports.Handlers;
 
-public class CreateReportExportHandler : IRequestHandler<CreateReportExportCommand, ReportResponse>
+public class CreateReportExportHandler : IRequestHandler<CreateReportExportCommand, ReportCompleteResponse>
 {
     private readonly IReportRepository _exportRepository;
     private readonly IMediator _mediator;
@@ -40,7 +40,7 @@ public class CreateReportExportHandler : IRequestHandler<CreateReportExportComma
         _stringLocalizer = stringLocalizer;
     }
 
-    public async Task<ReportResponse> Handle(CreateReportExportCommand request, CancellationToken cancellationToken)
+    public async Task<ReportCompleteResponse> Handle(CreateReportExportCommand request, CancellationToken cancellationToken)
     {
         await _validator.ValidateAndThrowAsync(request, cancellationToken);
         await _mediator.Publish(new CreateReportEvent(
@@ -84,23 +84,26 @@ public class CreateReportExportHandler : IRequestHandler<CreateReportExportComma
         ExternalProcess = request.ExternalProcess
     };
 
-    private ReportResponse MapToResponse(Report entity)
+    private ReportCompleteResponse MapToResponse(Report entity)
     {
-        return new ReportResponse(
-            entity.Id,
-            entity.Domain,
-            entity.Application,
-            entity.ReportType,
-            entity.DocumentName,
-            entity.DocumentKey,
-            entity.Version,
-            entity.UserIdentifier,
-            entity.CreationDate,
-            entity.ExpirationDate,
-            ProcessState.Waiting,
-            null,
-            entity.ExternalProcess,
-            string.IsNullOrEmpty(entity.ProcessMessage)
+        return new ReportCompleteResponse(
+            Id: entity.Id,
+            Domain: entity.Domain,
+            Application: entity.Application,
+            ReportType: entity.ReportType,
+            DocumentName: entity.DocumentName,
+            DocumentKey: entity.DocumentKey,
+            Version: entity.Version,
+            UserIdentifier: entity.UserIdentifier,
+            CreationDate: entity.CreationDate,
+            ExpirationDate: entity.ExpirationDate,
+            ProcessState: entity.ProcessState,
+            Filters: entity.Filters.Data,
+            ExtraProperties: entity.ExtraProperties.Data,
+            FileExtension: entity.FileExtension,
+            ProcessTimer: entity.ProcessTimer,
+            ExternalProcess: entity.ExternalProcess,
+            ProcessMessage: string.IsNullOrEmpty(entity.ProcessMessage)
                 ? entity.ProcessMessage
                 : _stringLocalizer[entity.ProcessMessage]
         );
