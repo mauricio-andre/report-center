@@ -111,7 +111,7 @@ public class ReportExportController : ControllerBase
         CancellationToken cancellationToken)
     {
         await _mediator.Send(
-            new UpdateReportStateCommand(
+            new UpdateReportExternalProcessStateCommand(
                 id,
                 request.ProcessState,
                 request.ProcessTimer,
