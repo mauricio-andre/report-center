@@ -44,13 +44,13 @@ public class SearchReportFromOrigemHandler : IRequestHandler<SearchReportFromOri
         return _coreDbContext.Reports
             .WhereIf(
                 !string.IsNullOrEmpty(request.Domain),
-                entity => entity.Domain.ToLower() == request.Domain!.ToLower())
+                entity => entity.Domain.ToUpper() == request.Domain!.ToUpper())
             .WhereIf(
                 !string.IsNullOrEmpty(request.Application),
-                entity => entity.Application.ToLower() == request.Application!.ToLower())
+                entity => entity.Application.ToUpper() == request.Application!.ToUpper())
             .WhereIf(
                 !string.IsNullOrEmpty(request.DocumentName),
-                entity => entity.DocumentName.ToLower() == request.DocumentName!.ToLower())
+                entity => entity.DocumentName.ToUpper() == request.DocumentName!.ToUpper())
             .WhereIf(
                 request.ReportType.HasValue,
                 entity => entity.ReportType == request.ReportType)
@@ -63,11 +63,15 @@ public class SearchReportFromOrigemHandler : IRequestHandler<SearchReportFromOri
             .WhereIf(
                 !string.IsNullOrEmpty(request.DocumentKeyComposition)
                     && request.DocumentKeyComposition.StartsWith('%'),
-                entity => entity.DocumentKey.ToLower().StartsWith(request.DocumentKeyComposition!.ToLower().Replace("%", "")))
+                entity => entity.DocumentKey.ToUpper().StartsWith(request.DocumentKeyComposition!.ToUpper().Replace("%", "")))
             .WhereIf(
                 !string.IsNullOrEmpty(request.DocumentKeyComposition)
                     && request.DocumentKeyComposition.EndsWith('%'),
-                entity => entity.DocumentKey.ToLower().EndsWith(request.DocumentKeyComposition!.ToLower().Replace("%", "")));
+                entity => entity.DocumentKey.ToUpper().EndsWith(request.DocumentKeyComposition!.ToUpper().Replace("%", "")))
+            .WhereIf(
+                !string.IsNullOrEmpty(request.DocumentKeyComposition)
+                    && !request.DocumentKeyComposition.Contains('%'),
+                entity => entity.DocumentKey.ToUpper() == request.DocumentKeyComposition!.ToUpper());
     }
 
     private static IQueryable<ReportResponse> MapToResponse(IQueryable<Report> query)

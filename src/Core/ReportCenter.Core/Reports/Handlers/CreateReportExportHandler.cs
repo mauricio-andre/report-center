@@ -70,10 +70,10 @@ public class CreateReportExportHandler : IRequestHandler<CreateReportExportComma
     private Report MapToEntity(CreateReportExportCommand request) => new Report()
     {
         Id = Guid.NewGuid(),
-        Domain = request.Domain,
-        Application = request.Application,
+        Domain = request.Domain.ToUpper(),
+        Application = request.Application.ToUpper(),
         ReportType = ReportType.Export,
-        DocumentName = request.DocumentName,
+        DocumentName = request.DocumentName.ToUpper(),
         DocumentKey = request.DocumentKey,
         Version = request.Version,
         UserIdentifier = _currentIdentity.GetNameIdentifier()!,

@@ -36,10 +36,10 @@ public class ExportRepository : IReportRepository
         CancellationToken cancellationToken = default)
     {
         return await _collection
-            .Find(entity => entity.Domain == domain
-                && entity.Application == application
+            .Find(entity => entity.Domain.ToUpper() == domain.ToUpper()
+                && entity.Application.ToUpper() == application.ToUpper()
                 && entity.Version == version
-                && entity.DocumentName == documentName
+                && entity.DocumentName.ToUpper() == documentName.ToUpper()
                 && entity.ReportType == reportType
                 && entity.DocumentKey == documentKey)
             .SortByDescending(entity => entity.CreationDate)
