@@ -27,6 +27,7 @@
     <ProjectReference Include="..\..\Providers\ReportCenter.OpenTelemetry\ReportCenter.OpenTelemetry.csproj" />
     <ProjectReference Include="..\..\Providers\ReportCenter.LocalStorages\ReportCenter.LocalStorages.csproj" />
     <ProjectReference Include="..\..\Providers\ReportCenter.AzureBlobStorages\ReportCenter.AzureBlobStorages.csproj" />
+    <ProjectReference Include="..\..\Providers\ReportCenter.OAuth\ReportCenter.OAuth.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,6 +2,8 @@ using System.Globalization;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Spreadsheet;
 using ReportCenter.App.GrpcServer.Methods.V1.Examples;
+using ReportCenter.Common.Providers.OAuth.Dtos;
+using ReportCenter.Common.Providers.OAuth.Interfaces;
 using ReportCenter.Core.Reports.Entities;
 using ReportCenter.Core.Reports.Interfaces;
 
@@ -9,23 +11,31 @@ namespace ReportCenter.App.Domain.Application.Worker.Reports.V2.Example;
 
 public class ExportExampleService : IReportService
 {
-    private readonly ILogger<ExportExampleService> _logger;
+    private readonly IOAuthTokenService _oAuthTokenService;
     private readonly ExamplesService.ExamplesServiceClient _client;
     private readonly IBiggestReportExport _biggestReportExport;
+    private readonly IConfiguration _configuration;
 
     public ExportExampleService(
-        ILogger<ExportExampleService> logger,
+        IOAuthTokenService oAuthTokenService,
         ExamplesService.ExamplesServiceClient client,
-        IBiggestReportExport biggestReportExport)
+        IBiggestReportExport biggestReportExport,
+        IConfiguration configuration)
     {
-        _logger = logger;
+        _oAuthTokenService = oAuthTokenService;
         _client = client;
         _biggestReportExport = biggestReportExport;
+        _configuration = configuration;
     }
 
     public async Task HandleAsync(Report report, CancellationToken cancellationToken = default)
     {
         var filters = report.Filters.ToObject<ExampleExportRequest>();
+
+        var token = await _oAuthTokenService.GetOAuthTokenAsync(new OAuthTokenRequestDto(
+            _configuration.GetValue<string>("OAuth:ClientId")!,
+            _configuration.GetValue<string>("OAuth:ClientSecret")!
+        ));
 
         await using (var stream = _biggestReportExport.OpenWriteStream(
             report.FullFileName,

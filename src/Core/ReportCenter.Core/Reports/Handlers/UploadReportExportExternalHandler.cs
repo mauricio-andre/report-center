@@ -55,7 +55,7 @@ public class UploadReportExportExternalHandler : IRequestHandler<UploadReportExp
         await _storageService.SaveAsync(
             report.FullFileName,
             request.Stream,
-            expiryDate: report.ExpirationDate,
+            expirationDate: report.ExpirationDate,
             cancellationToken: cancellationToken);
         _coreDbContext.Reports.Update(report);
         await _coreDbContext.SaveChangesAsync();

@@ -215,7 +215,7 @@ public class BiggestReportExportStream : IAsyncDisposable
 
         using (var stream = await _storageService.OpenWriteAsync(
             _fullFileName,
-            expiryDate: _expirationDate,
+            expirationDate: _expirationDate,
             cancellationToken: _cancellationToken))
         using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: false))
         {

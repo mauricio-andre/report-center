@@ -20,6 +20,10 @@ using ReportCenter.AzureServiceBus.Extensions;
 using ReportCenter.AzureServiceBus.Services;
 using ReportCenter.AzureBlobStorages.Services;
 using ReportCenter.AzureBlobStorages.Extensions;
+using ReportCenter.OAuth.Extensions;
+using ReportCenter.OAuth.Options;
+using ReportCenter.Common.Providers.OAuth.Interfaces;
+using ReportCenter.Core.Reports.Entities;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -48,6 +52,7 @@ builder.Services
     .AddSingleton<IMessageConsumer, AzureServiceBusConsumer>()
     // .AddScoped<IMessagePublisher, RabbitMQPublisher>()
     // .AddScoped<IMessageConsumer, RabbitMQConsumer>()
+    .AddSingleton<IOAuthTokenService, OAuthTokenService>()
     .AddSingleton<IBiggestReportExport, BiggestReportExport>()
     .AddSingleton<ReportCenter.App.Domain.Application.Worker.Reports.V1.Example.ExportExampleService>()
     .AddSingleton<ReportCenter.App.Domain.Application.Worker.Reports.V2.Example.ExportExampleService>();
@@ -62,6 +67,7 @@ builder.Services.AddCustomStringLocalizerProvider();
 builder.Services.AddAzureBlobStorageProvider(builder.Configuration, builder.Configuration.GetConnectionString("BlobStorage")!);
 // builder.Services.AddRabbitMQProvider(builder.Configuration, builder.Configuration.GetConnectionString("RabbitMQ")!);
 builder.Services.AddAzureServiceBusProvider(builder.Configuration, builder.Configuration.GetConnectionString("ServiceBus")!);
+builder.Services.AddOAuthProvider(builder.Configuration);
 builder.AddOpenTelemetryProvider();
 
 // Configure options
