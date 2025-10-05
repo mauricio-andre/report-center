@@ -19,6 +19,7 @@ public class BiggestReportExport : IBiggestReportExport
     public BiggestReportExportStream OpenWriteStream(
         string fullFileName,
         string sheetBaseName,
+        DateTimeOffset expirationDate,
         int maxRowsPerSheet = 1_000_000,
         CancellationToken cancellationToken = default)
     {
@@ -31,6 +32,7 @@ public class BiggestReportExport : IBiggestReportExport
             fullFileName,
             sheetBaseName,
             maxRowsPerSheet,
+            expirationDate,
             cancellationToken);
     }
 }
@@ -42,6 +44,7 @@ public class BiggestReportExportStream : IAsyncDisposable
     private readonly string _fullFileName;
     private readonly string _sheetBaseName;
     private readonly int _maxRowsPerSheet;
+    private readonly DateTimeOffset _expirationDate;
     private CancellationToken _cancellationToken;
     private Cell[]? _headerCells;
     private readonly Stylesheet _stylesheet = new Stylesheet(
@@ -62,6 +65,7 @@ public class BiggestReportExportStream : IAsyncDisposable
         string fullFileName,
         string sheetBaseName,
         int maxRowsPerSheet,
+        DateTimeOffset expirationDate,
         CancellationToken cancellationToken)
     {
         _storageService = storageService;
@@ -69,6 +73,7 @@ public class BiggestReportExportStream : IAsyncDisposable
         _sheetBaseName = sheetBaseName;
         _maxRowsPerSheet = maxRowsPerSheet;
         _cancellationToken = cancellationToken;
+        _expirationDate = expirationDate;
     }
 
     public void SetHeader(Cell[]? cells)
@@ -203,9 +208,15 @@ public class BiggestReportExportStream : IAsyncDisposable
 
     public async Task SaveAsync()
     {
+        if (_totalSheets == 0)
+            await OpenSheet();
+
         await CloseSheet();
 
-        using (var stream = await _storageService.OpenWriteAsync(_fullFileName, _cancellationToken))
+        using (var stream = await _storageService.OpenWriteAsync(
+            _fullFileName,
+            expiryDate: _expirationDate,
+            cancellationToken: _cancellationToken))
         using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: false))
         {
             WriteContentType(zip);

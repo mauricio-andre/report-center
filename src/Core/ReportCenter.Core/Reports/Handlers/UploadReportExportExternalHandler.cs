@@ -52,7 +52,11 @@ public class UploadReportExportExternalHandler : IRequestHandler<UploadReportExp
         report.ProcessTimer = request.ProcessTimer;
         report.ProcessState = ProcessState.Success;
 
-        await _storageService.SaveAsync(report.FullFileName, request.Stream, cancellationToken: cancellationToken);
+        await _storageService.SaveAsync(
+            report.FullFileName,
+            request.Stream,
+            expiryDate: report.ExpirationDate,
+            cancellationToken: cancellationToken);
         _coreDbContext.Reports.Update(report);
         await _coreDbContext.SaveChangesAsync();
     }

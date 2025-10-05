@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Diagnostics;
 using Grpc.Core;
 using MediatR;
@@ -165,6 +166,28 @@ public class MessageConsumerTemplate : BackgroundService
                             ProcessState.Waiting,
                             ProcessMessage: "message:report:cancellationtokenTriggered"),
                         cancellationToken);
+                }
+                catch (DbException ex)
+                {
+                    _logger.LogInformation(ex, "Processing stopped, database error.");
+                    await _messagePublisher.PublishProcessesAsync(message, cancellationToken);
+
+                    await _messagePublisher.PublishProgressAsync(
+                        new ReportMessageProgressDto(
+                            message.Id,
+                            message.Domain,
+                            message.Application,
+                            message.Version,
+                            message.DocumentName,
+                            message.ReportType,
+                            message.DocumentKey,
+                            ProcessState.Waiting,
+                            null,
+                            null,
+                            true
+                        ),
+                        cancellationToken: cancellationToken
+                    );
                 }
                 catch (RpcException ex)
                 {

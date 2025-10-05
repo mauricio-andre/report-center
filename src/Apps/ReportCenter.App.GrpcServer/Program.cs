@@ -4,7 +4,6 @@ using MediatR;
 using ReportCenter.App.GrpcServer.Authentication;
 using ReportCenter.App.GrpcServer.GrpcMetadata;
 using ReportCenter.App.GrpcServer.Interceptors;
-using ReportCenter.App.GrpcServer.Loggers;
 using ReportCenter.Common.Consts;
 using ReportCenter.Common.Diagnostics;
 using ReportCenter.Common.Providers.MessageQueues.Interfaces;
@@ -12,7 +11,6 @@ using ReportCenter.Core.Data;
 using ReportCenter.Core.Identity.Interfaces;
 using ReportCenter.Core.Identity.Services;
 using ReportCenter.Core.Reports.Interfaces;
-using ReportCenter.CustomConsoleFormatter.Extensions;
 using ReportCenter.CustomStringLocalizer.Extensions;
 using ReportCenter.Mongo.Extensions;
 using ReportCenter.MongoDB.Repositories;
@@ -70,7 +68,6 @@ builder.Services
 
 // Configure providers
 builder.Services.AddCustomStringLocalizerProvider();
-builder.Services.AddCustomConsoleFormatterProvider<LoggerPropertiesService>();
 // builder.Services.AddRabbitMQConsumer(builder.Configuration, builder.Configuration.GetConnectionString("RabbitMQ")!);
 builder.Services.AddAzureServiceBusProvider(builder.Configuration, builder.Configuration.GetConnectionString("ServiceBus")!);
 builder.AddOpenTelemetryProvider();
@@ -88,8 +85,8 @@ builder.Services.AddGrpcReflection();
 
 var app = builder.Build();
 
-// app.UseAuthentication();
-// app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Add gRPC Services
 if (app.Environment.IsDevelopment())

@@ -26,7 +26,10 @@ public class ExportExampleService : IReportService
     {
         var filters = report.Filters.ToObject<ExampleExportRequest>();
 
-        using (var stream = await _storageService.OpenWriteAsync(report.FullFileName, cancellationToken))
+        using (var stream = await _storageService.OpenWriteAsync(
+            report.FullFileName,
+            expiryDate: report.ExpirationDate,
+            cancellationToken: cancellationToken))
         using (var serverStreamingCall = _client.ExportList(filters, cancellationToken: cancellationToken))
         using (var xlWorkbook = new XLWorkbook())
         {

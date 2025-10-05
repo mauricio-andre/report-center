@@ -10,7 +10,11 @@ public class LocalStorage : IStorageService
     {
     }
 
-    public Task<Stream> OpenWriteAsync(string fullFileName, CancellationToken cancellationToken = default)
+    public Task<Stream> OpenWriteAsync(
+        string fullFileName,
+        DateTimeOffset expirationDate,
+        string? contentType = null,
+        CancellationToken cancellationToken = default)
     {
         var filePath = Path.Combine(_basePath, fullFileName);
         Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
@@ -43,7 +47,12 @@ public class LocalStorage : IStorageService
         return Task.FromResult<Stream?>(stream);
     }
 
-    public Task SaveAsync(string fullFileName, Stream content, string? contentType = null, CancellationToken cancellationToken = default)
+    public Task SaveAsync(
+        string fullFileName,
+        Stream content,
+        DateTimeOffset expirationDate,
+        string? contentType = null,
+        CancellationToken cancellationToken = default)
     {
         var filePath = Path.Combine(_basePath, fullFileName);
         Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);

@@ -3,6 +3,7 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspace",
+  "runServices": ["app", "aspire", "mongo", "rabbitmq"],
   "forwardPorts": [5234],
   "portsAttributes": {
       "5234": {
@@ -30,5 +31,6 @@
     }
   },
   "postCreateCommand": "dotnet restore",
+  "shutdownAction": "stopCompose",
   "remoteUser": "vscode"
 }

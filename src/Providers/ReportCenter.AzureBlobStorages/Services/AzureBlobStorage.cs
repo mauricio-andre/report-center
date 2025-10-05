@@ -17,10 +17,28 @@ public class AzureBlobStorage : IStorageService
         _blobContainerClient = blobServiceClient.GetBlobContainerClient(options.Value.ContainerName);
     }
 
-    public async Task<Stream> OpenWriteAsync(string fullFileName, CancellationToken cancellationToken = default)
+    public async Task<Stream> OpenWriteAsync(
+        string fullFileName,
+        DateTimeOffset expirationDate,
+        string? contentType = null,
+        CancellationToken cancellationToken = default)
     {
         await _blobContainerClient.CreateIfNotExistsAsync();
-        return await _blobContainerClient.GetBlobClient(fullFileName).OpenWriteAsync(true, null, cancellationToken);
+        return await _blobContainerClient
+            .GetBlobClient(fullFileName)
+            .OpenWriteAsync(
+                true,
+                new BlobOpenWriteOptions()
+                {
+                    HttpHeaders = new BlobHttpHeaders { ContentType = contentType ?? "application/octet-stream" },
+                    Tags = new Dictionary<string, string>()
+                    {
+                        {
+                            "expirationDate", expirationDate.ToString()
+                        }
+                    }
+                },
+                cancellationToken);
     }
 
     public async Task<Stream?> OpenReadAsync(string fullFileName, CancellationToken cancellationToken = default)
@@ -33,7 +51,12 @@ public class AzureBlobStorage : IStorageService
         return null;
     }
 
-    public async Task SaveAsync(string fullFileName, Stream content, string? contentType = null, CancellationToken cancellationToken = default)
+    public async Task SaveAsync(
+        string fullFileName,
+        Stream content,
+        DateTimeOffset expirationDate,
+        string? contentType = null,
+        CancellationToken cancellationToken = default)
     {
         await _blobContainerClient.CreateIfNotExistsAsync();
         await _blobContainerClient
@@ -42,7 +65,13 @@ public class AzureBlobStorage : IStorageService
                 content,
                 new BlobUploadOptions
                 {
-                    HttpHeaders = new BlobHttpHeaders { ContentType = contentType ?? "application/octet-stream" }
+                    HttpHeaders = new BlobHttpHeaders { ContentType = contentType ?? "application/octet-stream" },
+                    Tags = new Dictionary<string, string>()
+                    {
+                        {
+                            "expirationDate", expirationDate.ToString()
+                        }
+                    }
                 },
                 cancellationToken);
     }

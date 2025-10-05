@@ -8,7 +8,6 @@ using Microsoft.OpenApi.Models;
 using ReportCenter.App.RestServer.Authentication;
 using ReportCenter.App.RestServer.Extensions;
 using ReportCenter.App.RestServer.Filters;
-using ReportCenter.App.RestServer.Loggers;
 using ReportCenter.App.RestServer.Middlewares;
 using ReportCenter.App.RestServer.Transformers;
 using ReportCenter.Common.Consts;
@@ -18,7 +17,6 @@ using ReportCenter.Core.Data;
 using ReportCenter.Core.Identity.Interfaces;
 using ReportCenter.Core.Identity.Services;
 using ReportCenter.Core.Reports.Interfaces;
-using ReportCenter.CustomConsoleFormatter.Extensions;
 using ReportCenter.CustomStringLocalizer.Extensions;
 using ReportCenter.Mongo.Extensions;
 using ReportCenter.MongoDB.Repositories;
@@ -159,7 +157,6 @@ public class Program
 
         // Configure providers
         builder.Services.AddCustomStringLocalizerProvider();
-        builder.Services.AddCustomConsoleFormatterProvider<LoggerPropertiesService>();
         builder.Services.AddAzureBlobStorageProvider(builder.Configuration, builder.Configuration.GetConnectionString("BlobStorage")!);
         // builder.Services.AddRabbitMQProvider(builder.Configuration, builder.Configuration.GetConnectionString("RabbitMQ")!);
         builder.Services.AddAzureServiceBusProvider(builder.Configuration, builder.Configuration.GetConnectionString("ServiceBus")!);

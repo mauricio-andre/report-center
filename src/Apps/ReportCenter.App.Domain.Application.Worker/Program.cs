@@ -1,6 +1,5 @@
 using FluentValidation;
 using MediatR;
-using ReportCenter.App.Domain.Application.Worker.Loggers;
 using ReportCenter.App.Domain.Application.Worker.Reports;
 using ReportCenter.App.GrpcServer.Methods.V1.Examples;
 using ReportCenter.Common.Diagnostics;
@@ -13,7 +12,6 @@ using ReportCenter.Core.Identity.Services;
 using ReportCenter.Core.Reports.Interfaces;
 using ReportCenter.Core.Reports.Services;
 using ReportCenter.Core.Templates.BackgroundServices;
-using ReportCenter.CustomConsoleFormatter.Extensions;
 using ReportCenter.CustomStringLocalizer.Extensions;
 using ReportCenter.Mongo.Extensions;
 using ReportCenter.MongoDB.Repositories;
@@ -61,7 +59,6 @@ builder.Services
 
 // Configure providers
 builder.Services.AddCustomStringLocalizerProvider();
-builder.Services.AddCustomConsoleFormatterProvider<LoggerPropertiesService>();
 builder.Services.AddAzureBlobStorageProvider(builder.Configuration, builder.Configuration.GetConnectionString("BlobStorage")!);
 // builder.Services.AddRabbitMQProvider(builder.Configuration, builder.Configuration.GetConnectionString("RabbitMQ")!);
 builder.Services.AddAzureServiceBusProvider(builder.Configuration, builder.Configuration.GetConnectionString("ServiceBus")!);

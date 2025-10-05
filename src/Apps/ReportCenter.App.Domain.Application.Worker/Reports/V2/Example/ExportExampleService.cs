@@ -27,7 +27,11 @@ public class ExportExampleService : IReportService
     {
         var filters = report.Filters.ToObject<ExampleExportRequest>();
 
-        await using (var stream = _biggestReportExport.OpenWriteStream(report.FullFileName, "example", cancellationToken: cancellationToken))
+        await using (var stream = _biggestReportExport.OpenWriteStream(
+            report.FullFileName,
+            "example",
+            expirationDate: report.ExpirationDate,
+            cancellationToken: cancellationToken))
         {
             var DataStyleIndex = stream.AddDefaultExcelFormatData();
 
