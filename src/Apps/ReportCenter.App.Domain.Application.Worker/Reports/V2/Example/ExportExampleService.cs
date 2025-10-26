@@ -1,8 +1,5 @@
-using System.Globalization;
-using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Spreadsheet;
 using ReportCenter.App.GrpcServer.Methods.V1.Examples;
-using ReportCenter.Common.Providers.OAuth.Dtos;
 using ReportCenter.Common.Providers.OAuth.Interfaces;
 using ReportCenter.Core.Reports.Entities;
 using ReportCenter.Core.Reports.Interfaces;
@@ -14,28 +11,26 @@ public class ExportExampleService : IReportService
     private readonly IOAuthTokenService _oAuthTokenService;
     private readonly ExamplesService.ExamplesServiceClient _client;
     private readonly IBiggestReportExport _biggestReportExport;
-    private readonly IConfiguration _configuration;
 
     public ExportExampleService(
         IOAuthTokenService oAuthTokenService,
         ExamplesService.ExamplesServiceClient client,
-        IBiggestReportExport biggestReportExport,
-        IConfiguration configuration)
+        IBiggestReportExport biggestReportExport)
     {
         _oAuthTokenService = oAuthTokenService;
         _client = client;
         _biggestReportExport = biggestReportExport;
-        _configuration = configuration;
     }
 
     public async Task HandleAsync(Report report, CancellationToken cancellationToken = default)
     {
         var filters = report.Filters.ToObject<ExampleExportRequest>();
 
-        var token = await _oAuthTokenService.GetOAuthTokenAsync(new OAuthTokenRequestDto(
-            _configuration.GetValue<string>("OAuth:ClientId")!,
-            _configuration.GetValue<string>("OAuth:ClientSecret")!
-        ));
+        var token = await _oAuthTokenService.GetOAuthTokenAsync();
+        var headers = new Grpc.Core.Metadata
+        {
+            { "Authorization", $"Bearer {token}" }
+        };
 
         await using (var stream = _biggestReportExport.OpenWriteStream(
             report.FullFileName,
@@ -68,7 +63,7 @@ public class ExportExampleService : IReportService
                 }
             ]);
 
-            using (var serverStreamingCall = _client.ExportList(filters, cancellationToken: cancellationToken))
+            using (var serverStreamingCall = _client.ExportList(filters, headers, cancellationToken: cancellationToken))
             {
                 while (await serverStreamingCall.ResponseStream.MoveNext(cancellationToken))
                 {

@@ -1,6 +1,6 @@
 using ClosedXML.Excel;
+using Grpc.Core;
 using ReportCenter.App.GrpcServer.Methods.V1.Examples;
-using ReportCenter.Common.Providers.OAuth.Dtos;
 using ReportCenter.Common.Providers.OAuth.Interfaces;
 using ReportCenter.Common.Providers.Storage.Interfaces;
 using ReportCenter.Core.Reports.Entities;
@@ -13,34 +13,32 @@ public class ExportExampleService : IReportService
     private readonly IOAuthTokenService _oAuthTokenService;
     private readonly IStorageService _storageService;
     private readonly ExamplesService.ExamplesServiceClient _client;
-    private readonly IConfiguration _configuration;
 
     public ExportExampleService(
         IOAuthTokenService oAuthTokenService,
         IStorageService storageService,
-        ExamplesService.ExamplesServiceClient client,
-        IConfiguration configuration)
+        ExamplesService.ExamplesServiceClient client)
     {
         _oAuthTokenService = oAuthTokenService;
         _storageService = storageService;
         _client = client;
-        _configuration = configuration;
     }
 
     public async Task HandleAsync(Report report, CancellationToken cancellationToken = default)
     {
         var filters = report.Filters.ToObject<ExampleExportRequest>();
 
-        var token = await _oAuthTokenService.GetOAuthTokenAsync(new OAuthTokenRequestDto(
-            _configuration.GetValue<string>("OAuth:ClientId")!,
-            _configuration.GetValue<string>("OAuth:ClientSecret")!
-        ));
+        var token = await _oAuthTokenService.GetOAuthTokenAsync();
+        var headers = new Metadata
+        {
+            { "Authorization", $"Bearer {token}" }
+        };
 
         using (var stream = await _storageService.OpenWriteAsync(
             report.FullFileName,
             expirationDate: report.ExpirationDate,
             cancellationToken: cancellationToken))
-        using (var serverStreamingCall = _client.ExportList(filters, cancellationToken: cancellationToken))
+        using (var serverStreamingCall = _client.ExportList(filters, headers, cancellationToken: cancellationToken))
         using (var xlWorkbook = new XLWorkbook())
         {
             var _sheet = xlWorkbook.Worksheets.Add(WorksheetExampleDto.WorksheetName);

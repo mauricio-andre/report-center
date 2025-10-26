@@ -10,20 +10,14 @@
     <Protobuf Include="Protos\**\*_service.proto" GrpcServices="Server" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Core\ReportCenter.Core\ReportCenter.Core.csproj" />
-    <ProjectReference Include="..\..\Providers\ReportCenter.MongoDB\ReportCenter.MongoDB.csproj" />
     <ProjectReference Include="..\..\Providers\ReportCenter.CustomStringLocalizer\ReportCenter.CustomStringLocalizer.csproj" />
     <ProjectReference Include="..\..\Providers\ReportCenter.OpenTelemetry\ReportCenter.OpenTelemetry.csproj" />
-    <ProjectReference Include="..\..\Providers\ReportCenter.RabbitMQ\ReportCenter.RabbitMQ.csproj" />
-    <ProjectReference Include="..\..\Providers\ReportCenter.AzureServiceBus\ReportCenter.AzureServiceBus.csproj" />
-    <ProjectReference Include="..\..\Providers\ReportCenter.LocalStorages\ReportCenter.LocalStorages.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" Version="2.64.0" />
     <PackageReference Include="Grpc.AspNetCore.Server.Reflection" Version="2.70.0" />
     <PackageReference Include="Grpc.StatusProto" Version="2.71.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
-    <PackageReference Include="Scrutor" Version="4.2.2" />
   </ItemGroup>
 
 </Project>

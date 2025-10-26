@@ -1,9 +1,11 @@
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
+using Microsoft.AspNetCore.Authorization;
 using ReportCenter.App.GrpcServer.Methods.V1.Examples;
 
 namespace CqrsProject.App.GrpcServer.Methods.V1.Examples;
 
+[Authorize]
 public class ExamplesGrpcService : ExamplesService.ExamplesServiceBase
 {
     public ExamplesGrpcService()

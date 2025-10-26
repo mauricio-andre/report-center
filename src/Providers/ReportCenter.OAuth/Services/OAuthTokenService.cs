@@ -3,7 +3,6 @@ using System.Security.Authentication;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ReportCenter.Common.Providers.OAuth.Dtos;
 using ReportCenter.Common.Providers.OAuth.Interfaces;
 using ReportCenter.OAuth.Dtos;
 using ReportCenter.OAuth.Services;
@@ -29,7 +28,7 @@ public class OAuthTokenService : IOAuthTokenService
         _logger = logger;
     }
 
-    public Task<string> GetOAuthTokenAsync(OAuthTokenRequestDto request)
+    public Task<string> GetOAuthTokenAsync()
     {
         return _memoryCache.GetOrCreateAsync(
             $"authenticationClient:accessToken:",
@@ -39,8 +38,8 @@ public class OAuthTokenService : IOAuthTokenService
                 var data = new List<KeyValuePair<string, string>>()
                 {
                     new ("grant_type", "client_credentials"),
-                    new ("client_id", request.ClientId),
-                    new ("client_secret", request.ClientSecret)
+                    new ("client_id", _oAuthOptions.ClientId),
+                    new ("client_secret", _oAuthOptions.ClientSecret)
                 };
 
                 if (!string.IsNullOrEmpty(_oAuthOptions.Audience))
@@ -66,7 +65,7 @@ public class OAuthTokenService : IOAuthTokenService
                     throw new AuthenticationException("Failed to serialize authentication service response");
                 }
 
-                _logger.LogTrace($"Client {request.ClientId} has requested an access token successfully");
+                _logger.LogTrace($"Client {_oAuthOptions.ClientId} has requested an access token successfully");
 
                 cacheEntry.SlidingExpiration = TimeSpan.FromSeconds(result.ExpisesIn - 30);
                 cacheEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(result.ExpisesIn - 10);
