@@ -44,7 +44,7 @@ public class DownloadReportHandler : IRequestHandler<DownloadReportQuery, Downlo
         if (report == null)
             throw new EntityNotFoundException(_stringLocalizer, nameof(Report), request.Id.ToString());
 
-        if (report.ProcessState != ProcessState.Success)
+        if (report.ReportType == ReportType.Export && report.ProcessState != ProcessState.Success)
             throw new ReportIsNotReadyToDownloadException(_stringLocalizer);
 
         var stream = await _storageService.OpenReadAsync(report.FullFileName, cancellationToken);

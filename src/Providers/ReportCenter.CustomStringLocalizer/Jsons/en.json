@@ -14,5 +14,6 @@
   "message:validation:reportIsNotExternalProcess": "This action can only be performed on reports marked as external processing.",
   "message:report:cancellationtokenTriggered": "Processing canceled, message requeued",
   "message:report:connectionGrpcServerFail": "An error occurred while connecting to the data server, message requeued",
-  "message:report:connectionGrpcServerCriticalFail": "A critical error occurred while communicating with the data server, the report cannot be processed"
+  "message:report:connectionGrpcServerCriticalFail": "A critical error occurred while communicating with the data server, the report cannot be processed",
+  "message:validation:badFormattedJson": "The received JSON structure cannot be converted into a valid object."
 }

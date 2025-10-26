@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ReportCenter.App.RestServer.Endpoints.V1.Reports.Dtos;
 using ReportCenter.App.RestServer.Extensions;
+using ReportCenter.Core.Reports.Commands;
 using ReportCenter.Core.Reports.Queries;
 using ReportCenter.Core.Reports.Responses;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ReportCenter.App.RestServer.Endpoints.V1.Me.Controllers;
 
@@ -52,5 +54,48 @@ public class ReportController : ControllerBase
                 : StatusCodes.Status206PartialContent,
             list
         );
+    }
+
+    [HttpGet("{id}")]
+    [ProducesResponseType<ReportCompleteResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, Application.ProblemJson)]
+    public async Task<IActionResult> Get(
+        [FromRoute] Guid id)
+    {
+        var result = await _mediator.Send(new GetReportByIdQuery(id));
+        return Ok(result);
+    }
+
+    [HttpGet("{id}/downloads")]
+    [ProducesResponseType<FileStreamResult>(StatusCodes.Status200OK, "application/octet-stream")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, Application.ProblemJson)]
+    public async Task<IActionResult> Download(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new DownloadReportQuery(id), cancellationToken);
+        if (result == null)
+            return NotFound();
+
+        return File(result.Stream, "application/octet-stream", result.FileName, enableRangeProcessing: true);
+    }
+
+    [HttpPatch("{id}/external-process")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, Application.ProblemJson)]
+    public async Task<IActionResult> UpdateExternalState(
+        [FromRoute] Guid id,
+        [FromBody] UpdateReportExternalProcessStateDto request,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(
+            new UpdateReportExternalProcessStateCommand(
+                id,
+                request.ProcessState,
+                request.ProcessTimer,
+                request.ProcessMessage),
+            cancellationToken);
+
+        return NoContent();
     }
 }

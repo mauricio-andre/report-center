@@ -5,6 +5,7 @@ using ReportCenter.Common.Localization;
 using ReportCenter.Common.Providers.MessageQueues.Dtos;
 using ReportCenter.Common.Providers.MessageQueues.Enums;
 using ReportCenter.Common.Providers.MessageQueues.Interfaces;
+using ReportCenter.Common.Providers.Storage.Interfaces;
 using ReportCenter.Core.Identity.Interfaces;
 using ReportCenter.Core.Reports.Commands;
 using ReportCenter.Core.Reports.Entities;
@@ -15,22 +16,24 @@ using ReportCenter.Core.Reports.Responses;
 
 namespace ReportCenter.Core.Reports.Handlers;
 
-public class CreateReportExportHandler : IRequestHandler<CreateReportExportCommand, ReportCompleteResponse>
+public class CreateReportImportHandler : IRequestHandler<CreateReportImportCommand, ReportCompleteResponse>
 {
     private readonly IReportRepository _reportRepository;
     private readonly IMediator _mediator;
-    private readonly IValidator<CreateReportExportCommand> _validator;
+    private readonly IValidator<CreateReportImportCommand> _validator;
     private readonly ICurrentIdentity _currentIdentity;
     private readonly IMessagePublisher _messagePublisher;
     private readonly IStringLocalizer<ReportCenterResource> _stringLocalizer;
+    private readonly IStorageService _storageService;
 
-    public CreateReportExportHandler(
+    public CreateReportImportHandler(
         IReportRepository reportRepository,
         IMediator mediator,
-        IValidator<CreateReportExportCommand> validator,
+        IValidator<CreateReportImportCommand> validator,
         ICurrentIdentity currentIdentity,
         IMessagePublisher messagePublisher,
-        IStringLocalizer<ReportCenterResource> stringLocalizer)
+        IStringLocalizer<ReportCenterResource> stringLocalizer,
+        IStorageService storageService)
     {
         _reportRepository = reportRepository;
         _mediator = mediator;
@@ -38,22 +41,30 @@ public class CreateReportExportHandler : IRequestHandler<CreateReportExportComma
         _currentIdentity = currentIdentity;
         _messagePublisher = messagePublisher;
         _stringLocalizer = stringLocalizer;
+        _storageService = storageService;
     }
 
-    public async Task<ReportCompleteResponse> Handle(CreateReportExportCommand request, CancellationToken cancellationToken)
+    public async Task<ReportCompleteResponse> Handle(CreateReportImportCommand request, CancellationToken cancellationToken)
     {
         await _validator.ValidateAndThrowAsync(request, cancellationToken);
         await _mediator.Publish(new CreateReportEvent(
             request.Domain,
             request.Application,
-            ReportType.Export,
+            ReportType.Import,
             request.DocumentName,
             request.DocumentKey
         ), cancellationToken);
 
         var entity = MapToEntity(request);
 
+        await _storageService.SaveAsync(
+            entity.FullFileName,
+            request.Stream,
+            expirationDate: entity.ExpirationDate,
+            cancellationToken: cancellationToken);
+
         await _reportRepository.InsertAsync(entity);
+
         await _messagePublisher.PublishProcessesAsync(new ReportMessageDto(
             Id: entity.Id,
             Domain: entity.Domain,
@@ -67,12 +78,12 @@ public class CreateReportExportHandler : IRequestHandler<CreateReportExportComma
         return MapToResponse(entity);
     }
 
-    private Report MapToEntity(CreateReportExportCommand request) => new Report()
+    private Report MapToEntity(CreateReportImportCommand request) => new Report()
     {
         Id = Guid.NewGuid(),
         Domain = request.Domain.ToUpper(),
         Application = request.Application.ToUpper(),
-        ReportType = ReportType.Export,
+        ReportType = ReportType.Import,
         DocumentName = request.DocumentName.ToUpper(),
         DocumentKey = request.DocumentKey,
         Version = request.Version,
@@ -81,7 +92,8 @@ public class CreateReportExportHandler : IRequestHandler<CreateReportExportComma
         ExpirationDate = request.ExpirationDate,
         Filters = new FlexibleObject(request.Filters ?? new()),
         ExtraProperties = new FlexibleObject(request.ExtraProperties ?? new()),
-        ExternalProcess = request.ExternalProcess
+        ExternalProcess = request.ExternalProcess,
+        FileExtension = request.FileExtension
     };
 
     private ReportCompleteResponse MapToResponse(Report entity)

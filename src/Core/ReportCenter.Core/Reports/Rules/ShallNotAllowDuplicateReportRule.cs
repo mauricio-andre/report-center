@@ -29,10 +29,10 @@ public class ShallNotAllowDuplicateReportRule : INotificationHandler<CreateRepor
         ProcessState[] noEndStateArray = [ProcessState.Waiting, ProcessState.Processing];
 
         var hasDuplicate = await _coreDbContext.Reports.AnyAsync(export =>
-            export.Domain == notification.Domain
-            && export.Application == notification.Application
+            export.Domain == notification.Domain.ToUpper()
+            && export.Application == notification.Application.ToUpper()
             && export.ReportType == notification.ReportType
-            && export.DocumentName == notification.DocumentName
+            && export.DocumentName == notification.DocumentName.ToUpper()
             && export.DocumentKey == notification.DocumentKey
             && noEndStateArray.Contains(export.ProcessState));
 

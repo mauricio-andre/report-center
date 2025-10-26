@@ -66,8 +66,8 @@ public class Program
             .AddScoped<IReportRepository, ExportRepository>()
             .AddSingleton<IMessagePublisher, AzureServiceBusPublisher>()
             .AddSingleton<IMessageConsumer, AzureServiceBusConsumer>()
-            .AddSingleton<IStorageService, AzureBlobStorage>();
-            // .AddSingleton<IStorageService, LocalStorage>();
+            // .AddSingleton<IStorageService, AzureBlobStorage>();
+            .AddSingleton<IStorageService, LocalStorage>();
             // .AddSingleton<IMessagePublisher, RabbitMQPublisher>();
             // .AddSingleton<IMessageConsumer, RabbitMQConsumer>();
 
@@ -157,7 +157,7 @@ public class Program
 
         // Configure providers
         builder.Services.AddCustomStringLocalizerProvider();
-        builder.Services.AddAzureBlobStorageProvider(builder.Configuration, builder.Configuration.GetConnectionString("BlobStorage")!);
+        // builder.Services.AddAzureBlobStorageProvider(builder.Configuration, builder.Configuration.GetConnectionString("BlobStorage")!);
         // builder.Services.AddRabbitMQProvider(builder.Configuration, builder.Configuration.GetConnectionString("RabbitMQ")!);
         builder.Services.AddAzureServiceBusProvider(builder.Configuration, builder.Configuration.GetConnectionString("ServiceBus")!);
         builder.Services.AddSwaggerProvider(builder.Configuration);

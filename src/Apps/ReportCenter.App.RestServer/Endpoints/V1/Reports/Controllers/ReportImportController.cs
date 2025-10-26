@@ -1,13 +1,18 @@
-using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ReportCenter.Common.Providers.MessageQueues.Enums;
 using ReportCenter.Core.Reports.Commands;
+using ReportCenter.App.RestServer.Endpoints.V1.Reports.Dtos;
 using ReportCenter.Core.Reports.Queries;
 using ReportCenter.Core.Reports.Responses;
 using static System.Net.Mime.MediaTypeNames;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using ReportCenter.Common.Exceptions;
+using Microsoft.Extensions.Localization;
+using ReportCenter.Common.Localization;
 
 namespace ReportCenter.App.RestServer.Endpoints.V1.Me.Controllers;
 
@@ -16,21 +21,44 @@ namespace ReportCenter.App.RestServer.Endpoints.V1.Me.Controllers;
 [Authorize]
 [Produces("application/json")]
 [Route("v{version:apiVersion}/[controller]")]
-public class ReportExportController : ControllerBase
+public class ReportImportController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IStringLocalizer<ReportCenterResource> _stringLocalizer;
 
-    public ReportExportController(IMediator mediator)
+    public ReportImportController(
+        IMediator mediator,
+        IStringLocalizer<ReportCenterResource> stringLocalizer)
     {
         _mediator = mediator;
+        _stringLocalizer = stringLocalizer;
     }
 
     [HttpPost]
+    [Consumes("multipart/form-data")]
     [ProducesResponseType<ReportCompleteResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, Application.ProblemJson)]
-    public async Task<IActionResult> Create([FromBody] CreateReportExportCommand request)
+    public async Task<IActionResult> Create(
+        [FromForm] CreateReportImportDto request,
+        [Required] IFormFile file)
     {
-        var result = await _mediator.Send(request);
+        var errors = request.CatchJsonFormatExceptions();
+        if (errors.Keys.Any())
+            throw new BadFormattedJsonException(_stringLocalizer, errors);
+
+        var result = await _mediator.Send(new CreateReportImportCommand(
+            file.OpenReadStream(),
+            Path.GetExtension(file.FileName),
+            request.Domain,
+            request.Application,
+            request.DocumentName,
+            request.DocumentKey,
+            request.Version,
+            request.ExpirationDate,
+            request.FiltersDictionary,
+            request.ExtraPropertiesDictionary,
+            request.ExternalProcess
+        ));
         return Ok(result);
     }
 
@@ -49,32 +77,10 @@ public class ReportExportController : ControllerBase
             application,
             versionDoc,
             documentName,
-            ReportType.Export,
+            ReportType.Import,
             documentKey
         ));
 
         return Ok(result);
-    }
-
-    [HttpPost("{id}/external-process/uploads")]
-    [Consumes("multipart/form-data")]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, Application.ProblemJson)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, Application.ProblemJson)]
-    public async Task<IActionResult> UploadExternalFile(
-        [FromRoute] Guid id,
-        [Required] IFormFile file,
-        [FromForm] TimeSpan? processTimer,
-        CancellationToken cancellationToken)
-    {
-        await _mediator.Send(
-            new UploadReportExportExternalCommand(
-                id,
-                file.OpenReadStream(),
-                Path.GetExtension(file.FileName),
-                processTimer),
-            cancellationToken);
-
-        return Created();
     }
 }
