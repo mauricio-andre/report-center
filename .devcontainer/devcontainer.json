@@ -3,7 +3,7 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspace",
-  "runServices": ["app", "aspire", "mongo", "rabbitmq"],
+  "runServices": ["app", "mongo", "aspire"], // "mongo", "rabbitmq"
   "forwardPorts": [5234],
   "portsAttributes": {
       "5234": {

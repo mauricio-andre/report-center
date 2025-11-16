@@ -5,7 +5,10 @@
       "commandName": "Project",
       "dotnetRunMessages": true,
       "environmentVariables": {
-        "DOTNET_ENVIRONMENT": "Development"
+        "DOTNET_ENVIRONMENT": "Development",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "http://aspire:18889",
+        "OTEL_EXPORTER_OTLP_INSECURE": "true",
+        "OTEL_RESOURCE_ATTRIBUTES": "service.namespace=ReportCenter,deployment.environment=dev"
       }
     }
   }
