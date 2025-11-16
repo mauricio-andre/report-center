@@ -39,7 +39,7 @@ public class BiggestReportExport : IBiggestReportExport
 
 public class BiggestReportExportStream : IAsyncDisposable
 {
-    private readonly string tempPath = Path.Combine(Path.GetTempPath(), "report-center");
+    private readonly string tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(), "report-center");
     private readonly IStorageService _storageService;
     private readonly string _fullFileName;
     private readonly string _sheetBaseName;

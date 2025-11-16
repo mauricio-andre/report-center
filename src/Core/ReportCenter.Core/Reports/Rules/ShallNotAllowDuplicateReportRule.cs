@@ -34,7 +34,8 @@ public class ShallNotAllowDuplicateReportRule : INotificationHandler<CreateRepor
             && export.ReportType == notification.ReportType
             && export.DocumentName == notification.DocumentName.ToUpper()
             && export.DocumentKey == notification.DocumentKey
-            && noEndStateArray.Contains(export.ProcessState));
+            && noEndStateArray.Contains(export.ProcessState)
+            && export.ExpirationDate >= DateTimeOffset.Now);
 
         if (hasDuplicate)
             throw new DuplicatedReportException(
