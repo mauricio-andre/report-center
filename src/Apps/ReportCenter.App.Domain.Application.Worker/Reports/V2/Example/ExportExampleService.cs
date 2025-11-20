@@ -3,6 +3,7 @@ using ReportCenter.App.GrpcServer.Methods.V1.Examples;
 using ReportCenter.Common.Providers.OAuth.Interfaces;
 using ReportCenter.Core.Reports.Entities;
 using ReportCenter.Core.Reports.Interfaces;
+using ReportCenter.Core.Reports.Extensions;
 
 namespace ReportCenter.App.Domain.Application.Worker.Reports.V2.Example;
 

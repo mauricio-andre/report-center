@@ -116,18 +116,6 @@ public class BiggestReportExportStream : IAsyncDisposable
         return (uint)(_stylesheet.CellFormats!.ChildElements.Count - 1);
     }
 
-    public UInt32Value AddDefaultExcelFormatData()
-    {
-        return AddCellFormat(new CellFormat { NumberFormatId = 14, ApplyNumberFormat = true });
-    }
-
-    public UInt32Value AddFormatCnpj()
-    {
-        var numberFormatId = NextNumberFormatId();
-        AddNumberingFormats(new NumberingFormat { NumberFormatId = numberFormatId, FormatCode = @"00"".""000"".""000""/""0000""-""00" });
-        return AddCellFormat(new CellFormat { NumberFormatId = numberFormatId, ApplyNumberFormat = true });
-    }
-
     public async Task WriteRowAsync(Cell[] cells)
     {
         _cancellationToken.ThrowIfCancellationRequested();
