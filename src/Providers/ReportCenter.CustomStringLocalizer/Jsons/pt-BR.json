@@ -15,5 +15,6 @@
   "message:report:cancellationtokenTriggered": "Processamento cancelado, mensagem recolocada na fila",
   "message:report:connectionGrpcServerFail": "Ocorreu um erro na conexão com o servidor de dados, mensagem recolocada na fila",
   "message:report:connectionGrpcServerCriticalFail": "Ocorreu um erro crítico na comunicação com o servidor de dados, o relatório não pode ser processado",
+  "message:report:reportAlreadyExpire": "A data de processamento é inferior a data de expiração do report",
   "message:validation:badFormattedJson": "A estrutura Json recebida não pode ser convertida para um objeto válido"
 }

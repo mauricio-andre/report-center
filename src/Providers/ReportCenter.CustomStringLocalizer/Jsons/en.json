@@ -15,5 +15,6 @@
   "message:report:cancellationtokenTriggered": "Processing canceled, message requeued",
   "message:report:connectionGrpcServerFail": "An error occurred while connecting to the data server, message requeued",
   "message:report:connectionGrpcServerCriticalFail": "A critical error occurred while communicating with the data server, the report cannot be processed",
+  "message:report:reportAlreadyExpire": "The processing date is earlier than the report's expiration date.",
   "message:validation:badFormattedJson": "The received JSON structure cannot be converted into a valid object."
 }

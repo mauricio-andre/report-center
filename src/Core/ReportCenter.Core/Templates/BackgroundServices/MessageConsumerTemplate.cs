@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ReportCenter.Common.Diagnostics;
+using ReportCenter.Common.Exceptions;
 using ReportCenter.Common.Loggers;
 using ReportCenter.Common.Options;
 using ReportCenter.Common.Providers.MessageQueues.Dtos;
@@ -137,14 +138,26 @@ public class MessageConsumerTemplate : BackgroundService
                             ProcessState.Processing),
                         cancellationToken);
 
-                    var report = await _reportRepository!.GetByIdAsync(message.Id);
+                    var report = await _reportRepository!.GetByIdAsync(message.Id)!;
+
+                    if (report!.ExpirationDate <= DateTimeOffset.Now)
+                    {
+                        await _mediator!.Send(
+                            new UpdateReportStateCommand(
+                                message.Id,
+                                ProcessState.Error,
+                                ProcessMessage: "message:report:reportAlreadyExpire"),
+                            cancellationToken);
+
+                        return;
+                    }
 
                     var stopwatch = new Stopwatch();
                     stopwatch.Start();
 
-                    var service = _reportServiceFactory!.CreateInstance(report!, _serviceScope!);
+                    var service = _reportServiceFactory!.CreateInstance(report, _serviceScope!);
 
-                    await service.HandleAsync(report!, cancellationToken);
+                    await service.HandleAsync(report, cancellationToken);
 
                     stopwatch.Stop();
 
@@ -214,6 +227,10 @@ public class MessageConsumerTemplate : BackgroundService
                             ProcessState.Error,
                             ProcessMessage: "message:report:connectionGrpcServerCriticalFail"),
                         cancellationToken);
+                }
+                catch (EntityNotFoundException ex)
+                {
+                    _logger.LogError(ex, "The export record was not found..");
                 }
                 catch (Exception ex)
                 {
