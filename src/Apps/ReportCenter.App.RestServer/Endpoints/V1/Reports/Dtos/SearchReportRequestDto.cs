@@ -4,7 +4,7 @@ using ReportCenter.Common.Queries;
 
 namespace ReportCenter.App.RestServer.Endpoints.V1.Reports.Dtos;
 
-public record SearchReportFromOrigemRequestDto(
+public record SearchReportRequestDto(
     string? Domain,
     string? Application,
     string? DocumentName,

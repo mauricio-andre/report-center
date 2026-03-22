@@ -6,7 +6,7 @@ using ReportCenter.Core.Reports.Responses;
 
 namespace ReportCenter.Core.Reports.Queries;
 
-public record SearchReportFromOrigemQuery(
+public record SearchReportQuery(
     string? Domain,
     string? Application,
     short? version,

@@ -36,7 +36,7 @@ public class ReportImportController : ControllerBase
 
     [HttpPost]
     [Consumes("multipart/form-data")]
-    [ProducesResponseType<ReportCompleteResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ReportResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, Application.ProblemJson)]
     public async Task<IActionResult> Create(
         [FromForm] CreateReportImportDto request,
@@ -63,7 +63,7 @@ public class ReportImportController : ControllerBase
     }
 
     [HttpGet("{domain}/{application}/{versionDoc}/{documentName}/{documentKey}")]
-    [ProducesResponseType<ReportCompleteResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ReportResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, Application.ProblemJson)]
     public async Task<IActionResult> GetFromOrigem(
         [FromRoute] string domain,

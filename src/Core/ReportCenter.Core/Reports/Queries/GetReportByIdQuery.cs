@@ -3,4 +3,4 @@ using ReportCenter.Core.Reports.Responses;
 
 namespace ReportCenter.Core.Reports.Queries;
 
-public record GetReportByIdQuery(Guid Id) : IRequest<ReportCompleteResponse>;
+public record GetReportByIdQuery(Guid Id) : IRequest<ReportResponse>;

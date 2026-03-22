@@ -13,4 +13,4 @@ public record CreateReportExportCommand(
     Dictionary<string, object>? Filters,
     Dictionary<string, object>? ExtraProperties,
     bool ExternalProcess = false
-) : IRequest<ReportCompleteResponse>;
+) : IRequest<ReportResponse>;

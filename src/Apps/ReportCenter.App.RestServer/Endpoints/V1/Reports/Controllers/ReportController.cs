@@ -28,10 +28,10 @@ public class ReportController : ControllerBase
     [HttpGet()]
     [ProducesResponseType<IList<ReportResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<IList<ReportResponse>>(StatusCodes.Status206PartialContent)]
-    public async Task<IActionResult> Get(
-        [FromQuery] SearchReportFromOrigemRequestDto request)
+    public async Task<IActionResult> Search(
+        [FromQuery] SearchReportRequestDto request)
     {
-        var result = await _mediator.Send(new SearchReportFromOrigemQuery(
+        var result = await _mediator.Send(new SearchReportQuery(
             request.Domain,
             request.Application,
             request.Version,
@@ -57,7 +57,7 @@ public class ReportController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [ProducesResponseType<ReportCompleteResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ReportResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, Application.ProblemJson)]
     public async Task<IActionResult> Get(
         [FromRoute] Guid id)

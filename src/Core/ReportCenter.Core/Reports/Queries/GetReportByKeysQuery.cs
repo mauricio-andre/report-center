@@ -11,4 +11,4 @@ public record GetReportByKeysQuery(
     string DocumentName,
     ReportType ReportType,
     string DocumentKey
-) : IRequest<ReportCompleteResponse>;
+) : IRequest<ReportResponse>;

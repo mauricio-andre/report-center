@@ -26,7 +26,7 @@ public class ReportExportController : ControllerBase
     }
 
     [HttpPost]
-    [ProducesResponseType<ReportCompleteResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ReportResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, Application.ProblemJson)]
     public async Task<IActionResult> Create([FromBody] CreateReportExportCommand request)
     {
@@ -35,7 +35,7 @@ public class ReportExportController : ControllerBase
     }
 
     [HttpGet("{domain}/{application}/{versionDoc}/{documentName}/{documentKey}")]
-    [ProducesResponseType<ReportCompleteResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ReportResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, Application.ProblemJson)]
     public async Task<IActionResult> GetFromOrigem(
         [FromRoute] string domain,

@@ -16,7 +16,7 @@ using ReportCenter.Core.Reports.Responses;
 
 namespace ReportCenter.Core.Reports.Handlers;
 
-public class CreateReportImportHandler : IRequestHandler<CreateReportImportCommand, ReportCompleteResponse>
+public class CreateReportImportHandler : IRequestHandler<CreateReportImportCommand, ReportResponse>
 {
     private readonly IReportRepository _reportRepository;
     private readonly IMediator _mediator;
@@ -44,7 +44,7 @@ public class CreateReportImportHandler : IRequestHandler<CreateReportImportComma
         _storageService = storageService;
     }
 
-    public async Task<ReportCompleteResponse> Handle(CreateReportImportCommand request, CancellationToken cancellationToken)
+    public async Task<ReportResponse> Handle(CreateReportImportCommand request, CancellationToken cancellationToken)
     {
         await _validator.ValidateAndThrowAsync(request, cancellationToken);
         await _mediator.Publish(new CreateReportEvent(
@@ -96,9 +96,9 @@ public class CreateReportImportHandler : IRequestHandler<CreateReportImportComma
         FileExtension = request.FileExtension
     };
 
-    private ReportCompleteResponse MapToResponse(Report entity)
+    private ReportResponse MapToResponse(Report entity)
     {
-        return new ReportCompleteResponse(
+        return new ReportResponse(
             Id: entity.Id,
             Domain: entity.Domain,
             Application: entity.Application,

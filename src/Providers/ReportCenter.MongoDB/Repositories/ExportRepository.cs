@@ -11,6 +11,12 @@ public class ExportRepository : IReportRepository
 {
     private readonly IMongoCollection<Report> _collection;
 
+    /// <inheritdoc/>
+    public IQueryable<Report> AsQueryable()
+    {
+        return _collection.AsQueryable();
+    }
+
     public ExportRepository(CoreDbContext mongoCoreDbContext, IMongoDatabase mongoDatabase)
     {
         _collection = mongoDatabase.GetCollection<Report>(ReportEfConfiguration.CollectionName);

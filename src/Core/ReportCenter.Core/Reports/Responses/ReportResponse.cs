@@ -14,6 +14,9 @@ public record ReportResponse(
     DateTimeOffset CreationDate,
     DateTimeOffset? ExpirationDate,
     ProcessState ProcessState,
+    Dictionary<string, object> Filters,
+    Dictionary<string, object> ExtraProperties,
+    string? FileExtension,
     TimeSpan? ProcessTimer,
     bool ExternalProcess,
     string? ProcessMessage

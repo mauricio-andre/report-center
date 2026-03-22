@@ -15,7 +15,7 @@ using ReportCenter.Core.Reports.Responses;
 
 namespace ReportCenter.Core.Reports.Handlers;
 
-public class CreateReportExportHandler : IRequestHandler<CreateReportExportCommand, ReportCompleteResponse>
+public class CreateReportExportHandler : IRequestHandler<CreateReportExportCommand, ReportResponse>
 {
     private readonly IReportRepository _reportRepository;
     private readonly IMediator _mediator;
@@ -40,7 +40,7 @@ public class CreateReportExportHandler : IRequestHandler<CreateReportExportComma
         _stringLocalizer = stringLocalizer;
     }
 
-    public async Task<ReportCompleteResponse> Handle(CreateReportExportCommand request, CancellationToken cancellationToken)
+    public async Task<ReportResponse> Handle(CreateReportExportCommand request, CancellationToken cancellationToken)
     {
         await _validator.ValidateAndThrowAsync(request, cancellationToken);
         await _mediator.Publish(new CreateReportEvent(
@@ -84,9 +84,9 @@ public class CreateReportExportHandler : IRequestHandler<CreateReportExportComma
         ExternalProcess = request.ExternalProcess
     };
 
-    private ReportCompleteResponse MapToResponse(Report entity)
+    private ReportResponse MapToResponse(Report entity)
     {
-        return new ReportCompleteResponse(
+        return new ReportResponse(
             Id: entity.Id,
             Domain: entity.Domain,
             Application: entity.Application,

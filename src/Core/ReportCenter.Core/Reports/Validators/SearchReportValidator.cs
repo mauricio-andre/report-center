@@ -3,9 +3,9 @@ using ReportCenter.Core.Reports.Queries;
 
 namespace ReportCenter.Core.Reports.Validators;
 
-public class SearchReportFromOrigemValidator : AbstractValidator<SearchReportFromOrigemQuery>
+public class SearchReportValidator : AbstractValidator<SearchReportQuery>
 {
-    public SearchReportFromOrigemValidator()
+    public SearchReportValidator()
     {
         RuleFor(prop => prop.Skip)
             .GreaterThan(0);

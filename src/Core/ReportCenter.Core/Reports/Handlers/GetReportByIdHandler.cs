@@ -10,7 +10,7 @@ using ReportCenter.Core.Reports.Responses;
 
 namespace ReportCenter.Core.Reports.Handlers;
 
-public class GetReportByIdHandler : IRequestHandler<GetReportByIdQuery, ReportCompleteResponse>
+public class GetReportByIdHandler : IRequestHandler<GetReportByIdQuery, ReportResponse>
 {
     private readonly IReportRepository _exportRepository;
     private readonly IStringLocalizer<ReportCenterResource> _stringLocalizer;
@@ -26,7 +26,7 @@ public class GetReportByIdHandler : IRequestHandler<GetReportByIdQuery, ReportCo
         _validator = validator;
     }
 
-    public async Task<ReportCompleteResponse> Handle(
+    public async Task<ReportResponse> Handle(
         GetReportByIdQuery request,
         CancellationToken cancellationToken)
     {
@@ -39,8 +39,8 @@ public class GetReportByIdHandler : IRequestHandler<GetReportByIdQuery, ReportCo
         return MapToResponse(entity);
     }
 
-    private ReportCompleteResponse MapToResponse(Report entity) =>
-        new ReportCompleteResponse(
+    private ReportResponse MapToResponse(Report entity) =>
+        new ReportResponse(
             entity.Id,
             entity.Domain,
             entity.Application,
