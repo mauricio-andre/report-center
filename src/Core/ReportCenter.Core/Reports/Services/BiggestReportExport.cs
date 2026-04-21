@@ -261,7 +261,7 @@ public class BiggestReportExportStream : IAsyncDisposable
         for (int i = 1; i <= _totalSheets; i++)
         {
             workbook
-                .Append(@$"<sheet name=""{_sheetBaseName} | {i}"" sheetId=""{i}"" r:id=""rId{i}""/>");
+                .Append(@$"<sheet name=""{GetSheetName(i)} | {i}"" sheetId=""{i}"" r:id=""rId{i}""/>");
         }
 
         AddXmlFromString(zip, "xl/workbook.xml",
@@ -272,6 +272,11 @@ public class BiggestReportExportStream : IAsyncDisposable
             </sheets>
             </workbook>");
     }
+
+    private string GetSheetName(int sheetNumber)
+        => _totalSheets == 1
+            ? _sheetBaseName
+            : $"{_sheetBaseName} | {sheetNumber}";
 
     private void WriteWorkbookXmlRels(ZipArchive zip)
     {
