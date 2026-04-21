@@ -66,15 +66,16 @@ public class SearchReportHandler : IRequestHandler<SearchReportQuery, Collection
                 entity => entity.ExpirationDate >= DateTimeOffset.Now)
             .WhereIf(
                 !string.IsNullOrEmpty(request.DocumentKeyComposition)
-                    && request.DocumentKeyComposition.StartsWith('%'),
-                entity => entity.DocumentKey.ToUpper().StartsWith(request.DocumentKeyComposition!.ToUpper().Replace("%", "")))
+                    && request.DocumentKeyComposition.StartsWith(':'),
+                entity => entity.DocumentKey.ToUpper().EndsWith(request.DocumentKeyComposition!.ToUpper()))
             .WhereIf(
                 !string.IsNullOrEmpty(request.DocumentKeyComposition)
-                    && request.DocumentKeyComposition.EndsWith('%'),
-                entity => entity.DocumentKey.ToUpper().EndsWith(request.DocumentKeyComposition!.ToUpper().Replace("%", "")))
+                    && request.DocumentKeyComposition.EndsWith(':'),
+                entity => entity.DocumentKey.ToUpper().StartsWith(request.DocumentKeyComposition!.ToUpper()))
             .WhereIf(
                 !string.IsNullOrEmpty(request.DocumentKeyComposition)
-                    && !request.DocumentKeyComposition.Contains('%'),
+                    && !request.DocumentKeyComposition.StartsWith(':')
+                    && !request.DocumentKeyComposition.EndsWith(':'),
                 entity => entity.DocumentKey.ToUpper() == request.DocumentKeyComposition!.ToUpper());
     }
 

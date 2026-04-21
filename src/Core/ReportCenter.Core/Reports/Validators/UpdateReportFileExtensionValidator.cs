@@ -12,6 +12,6 @@ public class UpdateReportFileExtensionValidator : AbstractValidator<UpdateReport
 
         RuleFor(prop => prop.FileExtension)
             .NotNull()
-            .IsInEnum();
+            .NotEmpty();
     }
 }
