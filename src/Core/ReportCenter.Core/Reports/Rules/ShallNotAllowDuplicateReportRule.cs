@@ -11,14 +11,14 @@ namespace ReportCenter.Core.Reports.Rules;
 
 public class ShallNotAllowDuplicateReportRule : INotificationHandler<CreateReportEvent>
 {
-    private readonly CoreDbContext _coreDbContext;
+    private readonly IDbContextFactory<CoreDbContext> _dbContextFactory;
     private readonly IStringLocalizer<ReportCenterResource> _stringLocalizer;
 
     public ShallNotAllowDuplicateReportRule(
         IDbContextFactory<CoreDbContext> dbContextFactory,
         IStringLocalizer<ReportCenterResource> stringLocalizer)
     {
-        _coreDbContext = dbContextFactory.CreateDbContext();
+        _dbContextFactory = dbContextFactory;
         _stringLocalizer = stringLocalizer;
     }
 
@@ -27,15 +27,17 @@ public class ShallNotAllowDuplicateReportRule : INotificationHandler<CreateRepor
         CancellationToken cancellationToken)
     {
         ProcessState[] noEndStateArray = [ProcessState.Waiting, ProcessState.Processing];
+        var coreDbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var hasDuplicate = await _coreDbContext.Reports.AnyAsync(export =>
+        var hasDuplicate = await coreDbContext.Reports.AnyAsync(export =>
             export.Domain == notification.Domain.ToUpper()
             && export.Application == notification.Application.ToUpper()
             && export.ReportType == notification.ReportType
             && export.DocumentName == notification.DocumentName.ToUpper()
             && export.DocumentKey == notification.DocumentKey
             && noEndStateArray.Contains(export.ProcessState)
-            && export.ExpirationDate >= DateTimeOffset.Now);
+            && export.ExpirationDate >= DateTimeOffset.Now,
+            cancellationToken);
 
         if (hasDuplicate)
             throw new DuplicatedReportException(

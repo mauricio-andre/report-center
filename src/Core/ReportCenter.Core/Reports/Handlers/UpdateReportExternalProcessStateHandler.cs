@@ -14,7 +14,7 @@ namespace ReportCenter.Core.Reports.Handlers;
 
 public class UpdateReportExternalProcessStateHandler : IRequestHandler<UpdateReportExternalProcessStateCommand>
 {
-    private readonly CoreDbContext _coreDbContext;
+    private readonly IDbContextFactory<CoreDbContext> _dbContextFactory;
     private readonly IStringLocalizer<ReportCenterResource> _stringLocalizer;
     private readonly IValidator<UpdateReportExternalProcessStateCommand> _validator;
     private readonly IMessagePublisher _messagePublisher;
@@ -25,7 +25,7 @@ public class UpdateReportExternalProcessStateHandler : IRequestHandler<UpdateRep
         IValidator<UpdateReportExternalProcessStateCommand> validator,
         IMessagePublisher messagePublisher)
     {
-        _coreDbContext = dbContextFactory.CreateDbContext();
+        _dbContextFactory = dbContextFactory;
         _stringLocalizer = stringLocalizer;
         _validator = validator;
         _messagePublisher = messagePublisher;
@@ -36,8 +36,9 @@ public class UpdateReportExternalProcessStateHandler : IRequestHandler<UpdateRep
         CancellationToken cancellationToken)
     {
         await _validator.ValidateAndThrowAsync(request, cancellationToken);
+        var coreDbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var entity = await _coreDbContext.Reports.FirstOrDefaultAsync(
+        var entity = await coreDbContext.Reports.FirstOrDefaultAsync(
             entity => entity.Id == request.Id,
             cancellationToken);
 
@@ -51,8 +52,8 @@ public class UpdateReportExternalProcessStateHandler : IRequestHandler<UpdateRep
         entity.ProcessTimer = request.ProcessTimer;
         entity.ProcessMessage = request.ProcessMessage;
 
-        _coreDbContext.Update(entity);
-        await _coreDbContext.SaveChangesAsync(cancellationToken);
+        coreDbContext.Update(entity);
+        await coreDbContext.SaveChangesAsync(cancellationToken);
 
         await _messagePublisher.PublishProgressAsync(
             new ReportMessageProgressDto(

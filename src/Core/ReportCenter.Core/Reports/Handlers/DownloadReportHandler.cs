@@ -16,7 +16,7 @@ namespace ReportCenter.Core.Reports.Handlers;
 public class DownloadReportHandler : IRequestHandler<DownloadReportQuery, DownloadReportResponse?>
 {
     private readonly IStorageService _storageService;
-    private readonly CoreDbContext _coreDbContext;
+    private readonly IDbContextFactory<CoreDbContext> _dbContextFactory;
     private readonly IValidator<DownloadReportQuery> _validator;
     private readonly IStringLocalizer<ReportCenterResource> _stringLocalizer;
 
@@ -26,7 +26,7 @@ public class DownloadReportHandler : IRequestHandler<DownloadReportQuery, Downlo
         IValidator<DownloadReportQuery> validator,
         IStringLocalizer<ReportCenterResource> stringLocalizer)
     {
-        _coreDbContext = dbContextFactory.CreateDbContext();
+        _dbContextFactory = dbContextFactory;
         _validator = validator;
         _storageService = storageService;
         _stringLocalizer = stringLocalizer;
@@ -35,11 +35,12 @@ public class DownloadReportHandler : IRequestHandler<DownloadReportQuery, Downlo
     public async Task<DownloadReportResponse?> Handle(DownloadReportQuery request, CancellationToken cancellationToken)
     {
         await _validator.ValidateAndThrowAsync(request, cancellationToken);
+        var coreDbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var report = await _coreDbContext.Reports
+        var report = await coreDbContext.Reports
             .Where(report => report.Id == request.Id)
             .AsNoTracking()
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (report == null)
             throw new EntityNotFoundException(_stringLocalizer, nameof(Report), request.Id.ToString());

@@ -15,7 +15,7 @@ namespace ReportCenter.Core.Reports.Handlers;
 public class UploadReportExportExternalHandler : IRequestHandler<UploadReportExportExternalCommand>
 {
     private readonly IStorageService _storageService;
-    private readonly CoreDbContext _coreDbContext;
+    private readonly IDbContextFactory<CoreDbContext> _dbContextFactory;
     private readonly IValidator<UploadReportExportExternalCommand> _validator;
     private readonly IStringLocalizer<ReportCenterResource> _stringLocalizer;
 
@@ -25,7 +25,7 @@ public class UploadReportExportExternalHandler : IRequestHandler<UploadReportExp
         IValidator<UploadReportExportExternalCommand> validator,
         IStringLocalizer<ReportCenterResource> stringLocalizer)
     {
-        _coreDbContext = dbContextFactory.CreateDbContext();
+        _dbContextFactory = dbContextFactory;
         _validator = validator;
         _storageService = storageService;
         _stringLocalizer = stringLocalizer;
@@ -34,10 +34,11 @@ public class UploadReportExportExternalHandler : IRequestHandler<UploadReportExp
     public async Task Handle(UploadReportExportExternalCommand request, CancellationToken cancellationToken)
     {
         await _validator.ValidateAndThrowAsync(request, cancellationToken);
+        var coreDbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var report = await _coreDbContext.Reports
+        var report = await coreDbContext.Reports
             .Where(report => report.Id == request.Id)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (report == null)
             throw new EntityNotFoundException(_stringLocalizer, nameof(Report), request.Id.ToString());
@@ -57,7 +58,7 @@ public class UploadReportExportExternalHandler : IRequestHandler<UploadReportExp
             request.Stream,
             expirationDate: report.ExpirationDate,
             cancellationToken: cancellationToken);
-        _coreDbContext.Reports.Update(report);
-        await _coreDbContext.SaveChangesAsync();
+        coreDbContext.Reports.Update(report);
+        await coreDbContext.SaveChangesAsync(cancellationToken);
     }
 }
