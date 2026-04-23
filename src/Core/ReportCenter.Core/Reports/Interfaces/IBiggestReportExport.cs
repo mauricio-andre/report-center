@@ -8,6 +8,6 @@ public interface IBiggestReportExport
         string fullFileName,
         string sheetBaseName,
         DateTimeOffset expirationDate,
-        int maxRowsPerSheet = 1_000_000,
+        int? maxRows = null,
         CancellationToken cancellationToken = default);
 }

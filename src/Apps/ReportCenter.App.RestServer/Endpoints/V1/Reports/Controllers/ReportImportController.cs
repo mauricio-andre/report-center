@@ -1,18 +1,18 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
+using ReportCenter.App.RestServer.Endpoints.V1.Reports.Dtos;
+using ReportCenter.Common.Exceptions;
+using ReportCenter.Common.Localization;
 using ReportCenter.Common.Providers.MessageQueues.Enums;
 using ReportCenter.Core.Reports.Commands;
-using ReportCenter.App.RestServer.Endpoints.V1.Reports.Dtos;
 using ReportCenter.Core.Reports.Queries;
 using ReportCenter.Core.Reports.Responses;
 using static System.Net.Mime.MediaTypeNames;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
-using ReportCenter.Common.Exceptions;
-using Microsoft.Extensions.Localization;
-using ReportCenter.Common.Localization;
 
 namespace ReportCenter.App.RestServer.Endpoints.V1.Me.Controllers;
 

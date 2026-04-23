@@ -10,14 +10,20 @@ using ReportCenter.App.RestServer.Extensions;
 using ReportCenter.App.RestServer.Filters;
 using ReportCenter.App.RestServer.Middlewares;
 using ReportCenter.App.RestServer.Transformers;
+using ReportCenter.AzureBlobStorages.Extensions;
+using ReportCenter.AzureBlobStorages.Services;
+using ReportCenter.AzureServiceBus.Extensions;
+using ReportCenter.AzureServiceBus.Services;
 using ReportCenter.Common.Consts;
 using ReportCenter.Common.Diagnostics;
 using ReportCenter.Common.Providers.MessageQueues.Interfaces;
+using ReportCenter.Common.Providers.Storage.Interfaces;
 using ReportCenter.Core.Data;
 using ReportCenter.Core.Identity.Interfaces;
 using ReportCenter.Core.Identity.Services;
 using ReportCenter.Core.Reports.Interfaces;
 using ReportCenter.CustomStringLocalizer.Extensions;
+using ReportCenter.LocalStorages.Services;
 using ReportCenter.Mongo.Extensions;
 using ReportCenter.MongoDB.Repositories;
 using ReportCenter.OpenTelemetry.Extensions;
@@ -26,12 +32,6 @@ using ReportCenter.RabbitMQ.Services;
 using ReportCenter.Scalar.Extensions;
 using ReportCenter.Swagger.Extensions;
 using Scalar.AspNetCore;
-using ReportCenter.AzureServiceBus.Extensions;
-using ReportCenter.AzureServiceBus.Services;
-using ReportCenter.Common.Providers.Storage.Interfaces;
-using ReportCenter.LocalStorages.Services;
-using ReportCenter.AzureBlobStorages.Services;
-using ReportCenter.AzureBlobStorages.Extensions;
 
 namespace ReportCenter.App.RestServer;
 
@@ -68,8 +68,8 @@ public class Program
             .AddSingleton<IMessageConsumer, AzureServiceBusConsumer>()
             // .AddSingleton<IStorageService, AzureBlobStorage>();
             .AddSingleton<IStorageService, LocalStorage>();
-            // .AddSingleton<IMessagePublisher, RabbitMQPublisher>();
-            // .AddSingleton<IMessageConsumer, RabbitMQConsumer>();
+        // .AddSingleton<IMessagePublisher, RabbitMQPublisher>();
+        // .AddSingleton<IMessageConsumer, RabbitMQConsumer>();
 
         // Configuration string location
         builder.Services.Configure<RequestLocalizationOptions>(options =>

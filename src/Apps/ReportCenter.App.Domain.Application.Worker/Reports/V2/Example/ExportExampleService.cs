@@ -2,8 +2,8 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using ReportCenter.App.GrpcServer.Methods.V1.Examples;
 using ReportCenter.Common.Providers.OAuth.Interfaces;
 using ReportCenter.Core.Reports.Entities;
-using ReportCenter.Core.Reports.Interfaces;
 using ReportCenter.Core.Reports.Extensions;
+using ReportCenter.Core.Reports.Interfaces;
 
 namespace ReportCenter.App.Domain.Application.Worker.Reports.V2.Example;
 

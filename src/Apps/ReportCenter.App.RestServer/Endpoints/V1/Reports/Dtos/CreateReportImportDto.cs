@@ -29,7 +29,8 @@ public class CreateReportImportDto()
             : JsonSerializer.Deserialize<Dictionary<string, object>>(Filters);
     }
 
-    internal Dictionary<string, object>? ExtraPropertiesDictionary {
+    internal Dictionary<string, object>? ExtraPropertiesDictionary
+    {
         get => string.IsNullOrEmpty(ExtraProperties)
             ? null
             : JsonSerializer.Deserialize<Dictionary<string, object>>(ExtraProperties);
