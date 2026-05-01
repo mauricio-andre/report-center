@@ -121,7 +121,7 @@ public class BiggestReportExportStream : IAsyncDisposable
                 "numberingFormat.NumberFormatId",
                 $"Values lower than or equal to 164 are reserved by Excel.");
 
-        NumberingFormat[] safeMatch = [numberingFormat];
+        OpenXmlElement[] safeMatch = [numberingFormat];
         _stylesheet.NumberingFormats!.Append(safeMatch);
 
         return numberingFormat.NumberFormatId;
@@ -129,7 +129,7 @@ public class BiggestReportExportStream : IAsyncDisposable
 
     public UInt32Value AddCellFormat(CellFormat cellFormat)
     {
-        CellFormat[] safeMatch = [cellFormat];
+        OpenXmlElement[] safeMatch = [cellFormat];
         _stylesheet.CellFormats!.Append(safeMatch);
         return (uint)(_stylesheet.CellFormats!.ChildElements.Count - 1);
     }
@@ -149,7 +149,7 @@ public class BiggestReportExportStream : IAsyncDisposable
 
     public async Task SaveAsync()
     {
-        using (var stream = await _storageService.OpenWriteAsync(
+        await using (var stream = await _storageService.OpenWriteAsync(
             _fullFileName,
             expirationDate: _expirationDate,
             cancellationToken: _cancellationToken))
@@ -158,7 +158,7 @@ public class BiggestReportExportStream : IAsyncDisposable
             var index = 0;
             var orderedSheetDictionary = _sheetStreamDictionary.Values
                 .SelectMany(stackSheet => stackSheet.Reverse())
-                .ToDictionary(sheet => index += 1);
+                .ToDictionary(_ => index += 1);
 
             WriteContentType(zip, orderedSheetDictionary);
             WriteRels(zip);
@@ -170,15 +170,17 @@ public class BiggestReportExportStream : IAsyncDisposable
             // xl/worksheets/sheet{i}.xml
             foreach (var item in orderedSheetDictionary)
             {
-                if (!item.Value.IsSheetOpen && !item.Value.IsReachedMaxRows)
+                if (item.Value is { IsSheetOpen: false, IsReachedMaxRows: false })
                     await item.Value.OpenSheet();
 
                 await item.Value.CloseSheet();
 
                 var entry = zip.CreateEntry($"xl/worksheets/sheet{item.Key}.xml", CompressionLevel.Fastest);
-                using var entryStream = entry.Open();
-                using var sourceStream = new FileStream(item.Value.GetTempFullFileName(), FileMode.Open, FileAccess.Read, FileShare.Read);
-                await sourceStream.CopyToAsync(entryStream, _cancellationToken);
+                await using (var entryStream = entry.Open())
+                await using (var sourceStream = new FileStream(item.Value.GetTempFullFileName(), FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    await sourceStream.CopyToAsync(entryStream, _cancellationToken);
+                }
             }
         }
     }
@@ -264,8 +266,10 @@ public class BiggestReportExportStream : IAsyncDisposable
     private static void AddXmlFromString(ZipArchive zip, string entryName, string xmlContent)
     {
         var entry = zip.CreateEntry(entryName, CompressionLevel.Fastest);
-        using var writer = new StreamWriter(entry.Open(), new UTF8Encoding(false));
-        writer.Write(xmlContent);
+        using (var writer = new StreamWriter(entry.Open(), new UTF8Encoding(false)))
+        {
+            writer.Write(xmlContent);
+        }
     }
 
     public async ValueTask DisposeAsync()
@@ -287,9 +291,9 @@ public class BiggestReportExportStream : IAsyncDisposable
 
 public sealed class BiggestReportExportSheet : IAsyncDisposable
 {
-    private static readonly char[] InvalidSheetNameChars = [':', '\\', '/', '?', '*', '[', ']'];
-    private const int DEFAULT_MAX_ROWS_PER_SHEET = 1_000_000;
-    private const int MAX_COLUMNS_PER_SHEET = 16_384;
+    private static readonly char[] s_invalidSheetNameChars = [':', '\\', '/', '?', '*', '[', ']'];
+    private const int DefaultMaxRowsPerSheet = 1_000_000;
+    private const int MaxColumnsPerSheet = 16_384;
     private readonly string _tempFullFileName;
     private readonly string _sheetBaseName;
     private readonly int _maxRows;
@@ -304,15 +308,15 @@ public sealed class BiggestReportExportSheet : IAsyncDisposable
     public BiggestReportExportSheet(
         string sheetBaseName,
         string tempPath,
-        int? maxRows = DEFAULT_MAX_ROWS_PER_SHEET,
+        int? maxRows = DefaultMaxRowsPerSheet,
         CancellationToken cancellationToken = default)
     {
         ValidateSheetBaseName(sheetBaseName);
 
         _sheetBaseName = sheetBaseName.Trim();
-        _maxRows = maxRows > DEFAULT_MAX_ROWS_PER_SHEET || maxRows < 2
-            ? DEFAULT_MAX_ROWS_PER_SHEET
-            : maxRows ?? DEFAULT_MAX_ROWS_PER_SHEET;
+        _maxRows = maxRows is > DefaultMaxRowsPerSheet or < 2
+            ? DefaultMaxRowsPerSheet
+            : maxRows ?? DefaultMaxRowsPerSheet;
 
         _cancellationToken = cancellationToken;
         _tempFullFileName = Path.Combine(tempPath, $"{Guid.NewGuid()}.xml");
@@ -322,20 +326,19 @@ public sealed class BiggestReportExportSheet : IAsyncDisposable
     {
         if (string.IsNullOrEmpty(sheetBaseName.Trim()))
             throw new ArgumentOutOfRangeException(
-                "sheetBaseName",
+                nameof(sheetBaseName),
                 "Excel sheet names cannot be empty.");
 
         if (sheetBaseName.Trim().Length > 31)
             throw new ArgumentOutOfRangeException(
-                "sheetBaseName",
+                nameof(sheetBaseName),
                 "Excel sheet names cannot exceed 31 characters.");
 
-        if (InvalidSheetNameChars.Any(item => sheetBaseName.Contains(item)))
+        if (s_invalidSheetNameChars.Any(sheetBaseName.Contains))
             throw new ArgumentOutOfRangeException(
-                "sheetBaseName",
-                $"Excel tab names cannot contain the following special characters ({string.Join(",", InvalidSheetNameChars)}).");
+                nameof(sheetBaseName),
+                $"Excel tab names cannot contain the following special characters ({string.Join(",", s_invalidSheetNameChars)}).");
     }
-
 
     public string GetTempFullFileName() => _tempFullFileName;
 
@@ -377,7 +380,7 @@ public sealed class BiggestReportExportSheet : IAsyncDisposable
         if (IsReachedMaxRows)
             throw new ReportExportReachedMaxRowsException();
 
-        if (cells.Length > MAX_COLUMNS_PER_SHEET)
+        if (cells.Length > MaxColumnsPerSheet)
             throw new ArgumentOutOfRangeException(
                 "cells.Length",
                 "Sheet exceeded the maximum number of columns allowed by Excel.");
@@ -389,7 +392,7 @@ public sealed class BiggestReportExportSheet : IAsyncDisposable
         for (uint index = 0; index < cells.Length; index++)
         {
             cells[index].CellReference = GetColumnName(index + 1) + _currentRow;
-            Cell[] safeMatch = [cells[index]];
+            OpenXmlElement[] safeMatch = [cells[index]];
             row.Append(safeMatch);
         }
 
@@ -401,6 +404,24 @@ public sealed class BiggestReportExportSheet : IAsyncDisposable
             IsReachedMaxRows = true;
             await CloseSheet();
         }
+    }
+
+    private static string GetColumnName(uint columnIndex)
+    {
+        // O Excel tem no máximo 16384 colunas (XFD),
+        // logo, o tamanho máximo do nome é 3 caracteres.
+        Span<char> buffer = stackalloc char[3];
+        int position = buffer.Length;
+
+        while (columnIndex > 0)
+        {
+            columnIndex--; // ajuste: Excel começa em 1
+            int remainder = (int)columnIndex % 26;
+            buffer[--position] = (char)('A' + remainder);
+            columnIndex /= 26;
+        }
+
+        return new string(buffer.Slice(position));
     }
 
     public async Task OpenSheet()
@@ -421,30 +442,12 @@ public sealed class BiggestReportExportSheet : IAsyncDisposable
             _fileStream,
             new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
 
-        await _streamWriter.WriteLineAsync(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>");
-        await _streamWriter.WriteLineAsync(@"<worksheet xmlns=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
+        await _streamWriter.WriteLineAsync("""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>""");
+        await _streamWriter.WriteLineAsync("""<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">""");
         await _streamWriter.WriteLineAsync(@"  <sheetData>");
 
         if (_headerCells != null && _headerCells.Length > 0)
             await WriteRowAsync(_headerCells.Select(header => (Cell)header.CloneNode(true)).ToArray());
-    }
-
-    private static string GetColumnName(uint columnIndex)
-    {
-        // O Excel tem no máximo 16384 colunas (XFD),
-        // logo, o tamanho máximo do nome é 3 caracteres.
-        Span<char> buffer = stackalloc char[3];
-        int position = buffer.Length;
-
-        while (columnIndex > 0)
-        {
-            columnIndex--; // ajuste: Excel começa em 1
-            int remainder = (int)columnIndex % 26;
-            buffer[--position] = (char)('A' + remainder);
-            columnIndex /= 26;
-        }
-
-        return new string(buffer.Slice(position));
     }
 
     public async Task CloseSheet()
