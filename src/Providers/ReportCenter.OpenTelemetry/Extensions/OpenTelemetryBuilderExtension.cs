@@ -29,9 +29,6 @@ public static class OpenTelemetryBuilderExtension
                 .AddAspNetCoreInstrumentation(options => options.RecordException = true)
                 .AddEntityFrameworkCoreInstrumentation(options => options.SetDbStatementForText = true);
 
-            if (tracingSection.GetValue<bool>("ConsoleExporter"))
-                tracing.AddConsoleExporter();
-
             string? endpoint = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT");
 
             if (!string.IsNullOrEmpty(endpoint))
@@ -58,9 +55,6 @@ public static class OpenTelemetryBuilderExtension
                 .AddHttpClientInstrumentation()
                 .AddMeter("Microsoft.AspNetCore.Hosting")
                 .AddMeter("Microsoft.AspNetCore.Server.Kestrel");
-
-            if (metricsSection.GetValue<bool>("ConsoleExporter"))
-                metrics.AddConsoleExporter();
 
             string? endpoint = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT");
 

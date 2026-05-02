@@ -86,7 +86,7 @@ public class SearchReportHandler : IRequestHandler<SearchReportQuery, Collection
     private async IAsyncEnumerable<ReportResponse> MapToResponse(IQueryable<Report> query)
     {
 #pragma warning disable S6966
-        foreach (var entity in query.ToList())
+        foreach (var entity in await Task.Run(query.ToList))
         {
             yield return new ReportResponse(
                 entity.Id,
@@ -106,7 +106,7 @@ public class SearchReportHandler : IRequestHandler<SearchReportQuery, Collection
                 entity.ProcessTimer,
                 entity.ExternalProcess,
                 string.IsNullOrEmpty(entity.ProcessMessage)
-                    ? null
+                    ? (string?)null
                     : _stringLocalizer[entity.ProcessMessage]
             );
         }

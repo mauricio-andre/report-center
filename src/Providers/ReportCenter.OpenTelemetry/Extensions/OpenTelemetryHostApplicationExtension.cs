@@ -51,9 +51,6 @@ public static class OpenTelemetryHostApplicationExtension
             configure.IncludeFormattedMessage = loggingSection.GetValue<bool>("IncludeFormattedMessage");
             configure.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName));
 
-            if (loggingSection.GetValue<bool>("ConsoleExporter"))
-                configure.AddConsoleExporter();
-
             string? endpoint = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT");
 
             if (!string.IsNullOrEmpty(endpoint))
