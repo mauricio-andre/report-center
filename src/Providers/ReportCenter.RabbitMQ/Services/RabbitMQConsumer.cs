@@ -78,6 +78,12 @@ public sealed class RabbitMQConsumer : IMessageConsumer
         return _channel!.BasicAckAsync(converted!.DeliveryTag, multiple: false, cancellationToken: cancellationToken);
     }
 
+    public ValueTask ReleaseMessageAsync(object args, CancellationToken cancellationToken = default)
+    {
+        var converted = args as BasicDeliverEventArgs;
+        return _channel!.BasicNackAsync(converted!.DeliveryTag, multiple: false, requeue: true, cancellationToken);
+    }
+
     public ValueTask<string?> GetParentTransactionId(object args)
     {
         var converted = args as BasicDeliverEventArgs;

@@ -31,14 +31,19 @@ public sealed class AzureServiceBusConsumer : IMessageConsumer
 
     public Task StartAsync(CancellationToken cancellationToken = default)
     {
+        var processorOptions = new ServiceBusProcessorOptions
+        {
+            MaxConcurrentCalls = 1,
+            AutoCompleteMessages = false
+        };
+
+        if (_options.MaxAutoLockRenewalDurationInMinutes.HasValue)
+            processorOptions.MaxAutoLockRenewalDuration = TimeSpan.FromMinutes(_options.MaxAutoLockRenewalDurationInMinutes.Value);
+
         _processor = _client.CreateProcessor(
             _options.ProcessesTopicName,
             _options.SubscriptionName,
-            new ServiceBusProcessorOptions
-            {
-                MaxConcurrentCalls = 1,
-                AutoCompleteMessages = false
-            });
+            processorOptions);
 
         return Task.CompletedTask;
     }
@@ -94,6 +99,12 @@ public sealed class AzureServiceBusConsumer : IMessageConsumer
     {
         var converted = args as ProcessMessageEventArgs;
         return new ValueTask(converted!.CompleteMessageAsync(converted.Message, cancellationToken));
+    }
+
+    public ValueTask ReleaseMessageAsync(object args, CancellationToken cancellationToken = default)
+    {
+        var converted = args as ProcessMessageEventArgs;
+        return new ValueTask(converted!.AbandonMessageAsync(converted.Message, cancellationToken: cancellationToken));
     }
 
     public ValueTask<string?> GetParentTransactionId(object args)

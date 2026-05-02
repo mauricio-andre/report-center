@@ -9,6 +9,7 @@ public interface IMessageConsumer : IDisposable
     ReportMessageDto DeserializeMessage(object args);
     ValueTask AbortProcessingAsync(object args, Exception ex, CancellationToken cancellationToken = default);
     ValueTask CompleteMessage(object args, CancellationToken cancellationToken = default);
+    ValueTask ReleaseMessageAsync(object args, CancellationToken cancellationToken = default);
     ValueTask<string?> GetParentTransactionId(object args);
     Task StopAsync(CancellationToken cancellationToken = default);
 }

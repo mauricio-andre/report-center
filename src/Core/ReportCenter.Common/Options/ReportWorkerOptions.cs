@@ -10,4 +10,5 @@ public class ReportWorkerOptions
     public string Application { get; set; } = string.Empty;
     public ReportType? ReportType { get; set; }
     public string? DocumentName { get; set; } = string.Empty;
+    public bool CompleteMessageBeforeProcessing { get; set; }
 }

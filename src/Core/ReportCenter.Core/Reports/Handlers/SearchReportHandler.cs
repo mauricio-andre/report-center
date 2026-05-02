@@ -1,9 +1,10 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using ReportCenter.Common.Extensions;
+using ReportCenter.Common.Localization;
 using ReportCenter.Common.Responses;
-using ReportCenter.Core.Data;
 using ReportCenter.Core.Reports.Entities;
 using ReportCenter.Core.Reports.Interfaces;
 using ReportCenter.Core.Reports.Queries;
@@ -15,13 +16,16 @@ public class SearchReportHandler : IRequestHandler<SearchReportQuery, Collection
 {
     private readonly IReportRepository _reportRepository;
     private readonly IValidator<SearchReportQuery> _validator;
+    private readonly IStringLocalizer<ReportCenterResource> _stringLocalizer;
 
     public SearchReportHandler(
         IReportRepository reportRepository,
-        IValidator<SearchReportQuery> validator)
+        IValidator<SearchReportQuery> validator,
+        IStringLocalizer<ReportCenterResource> stringLocalizer)
     {
         _reportRepository = reportRepository;
         _validator = validator;
+        _stringLocalizer = stringLocalizer;
     }
 
     public async Task<CollectionResponse<ReportResponse>> Handle(
@@ -79,7 +83,7 @@ public class SearchReportHandler : IRequestHandler<SearchReportQuery, Collection
                 entity => entity.DocumentKey.ToUpper() == request.DocumentKeyComposition!.ToUpper());
     }
 
-    private static async IAsyncEnumerable<ReportResponse> MapToResponse(IQueryable<Report> query)
+    private async IAsyncEnumerable<ReportResponse> MapToResponse(IQueryable<Report> query)
     {
 #pragma warning disable S6966
         foreach (var entity in query.ToList())
@@ -101,7 +105,9 @@ public class SearchReportHandler : IRequestHandler<SearchReportQuery, Collection
                 entity.FileExtension,
                 entity.ProcessTimer,
                 entity.ExternalProcess,
-                entity.ProcessMessage
+                string.IsNullOrEmpty(entity.ProcessMessage)
+                    ? null
+                    : _stringLocalizer[entity.ProcessMessage]
             );
         }
 #pragma warning restore S6966

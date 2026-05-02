@@ -97,11 +97,13 @@ public class MessageConsumerTemplate : BackgroundService
             return;
         }
 
-        await _messageConsumer.CompleteMessage(args, cancellationToken);
+        if (_reportWorkerOptions.CompleteMessageBeforeProcessing)
+            await _messageConsumer.CompleteMessage(args, cancellationToken);
 
         if (!IsMessageWithinProcessingScope(message))
         {
             _logger.LogInformation("Message does not match Report Worker options.");
+            await CompleteMessageIfNeeded(args);
             return;
         }
 
@@ -149,6 +151,7 @@ public class MessageConsumerTemplate : BackgroundService
                                 ProcessMessage: "message:report:reportAlreadyExpire"),
                             cancellationToken);
 
+                        await CompleteMessageIfNeeded(args);
                         return;
                     }
 
@@ -167,23 +170,25 @@ public class MessageConsumerTemplate : BackgroundService
                             ProcessState.Success,
                             stopwatch.Elapsed),
                         cancellationToken);
+
+                    await CompleteMessageIfNeeded(args);
                 }
                 catch (OperationCanceledException ex)
                 {
                     _logger.LogInformation(ex, "Processing stopped, rescheduling message.");
-                    await _messagePublisher.PublishProcessesAsync(message, cancellationToken);
+                    await RequeueMessage(args, message);
 
                     await _mediator!.Send(
                         new UpdateReportStateCommand(
                             message.Id,
                             ProcessState.Waiting,
                             ProcessMessage: "message:report:cancellationtokenTriggered"),
-                        cancellationToken);
+                        CancellationToken.None);
                 }
                 catch (DbException ex)
                 {
                     _logger.LogInformation(ex, "Processing stopped, database error.");
-                    await _messagePublisher.PublishProcessesAsync(message, cancellationToken);
+                    await RequeueMessage(args, message);
 
                     await _messagePublisher.PublishProgressAsync(
                         new ReportMessageProgressDto(
@@ -210,7 +215,7 @@ public class MessageConsumerTemplate : BackgroundService
                         || ex.Status.StatusCode == StatusCode.DeadlineExceeded)
                     {
                         _logger.LogInformation(ex, "Putting message back into the processing queue");
-                        await _messagePublisher.PublishProcessesAsync(message, cancellationToken);
+                        await RequeueMessage(args, message);
 
                         await _mediator!.Send(
                             new UpdateReportStateCommand(
@@ -227,10 +232,13 @@ public class MessageConsumerTemplate : BackgroundService
                             ProcessState.Error,
                             ProcessMessage: "message:report:connectionGrpcServerCriticalFail"),
                         cancellationToken);
+
+                    await CompleteMessageIfNeeded(args);
                 }
                 catch (EntityNotFoundException ex)
                 {
                     _logger.LogError(ex, "The export record was not found..");
+                    await CompleteMessageIfNeeded(args);
                 }
                 catch (Exception ex)
                 {
@@ -241,9 +249,30 @@ public class MessageConsumerTemplate : BackgroundService
                             ProcessState.Error,
                             ProcessMessage: ex.Message),
                         cancellationToken);
+
+                    await CompleteMessageIfNeeded(args);
                 }
             }
         }
+    }
+
+    private async Task CompleteMessageIfNeeded(dynamic args)
+    {
+        if (_reportWorkerOptions.CompleteMessageBeforeProcessing)
+            return;
+
+        await _messageConsumer.CompleteMessage(args, CancellationToken.None);
+    }
+
+    private async Task RequeueMessage(dynamic args, ReportMessageDto message)
+    {
+        if (_reportWorkerOptions.CompleteMessageBeforeProcessing)
+        {
+            await _messagePublisher.PublishProcessesAsync(message, CancellationToken.None);
+            return;
+        }
+
+        await _messageConsumer.ReleaseMessageAsync(args, CancellationToken.None);
     }
 
     private bool IsMessageWithinProcessingScope(ReportMessageDto message)
