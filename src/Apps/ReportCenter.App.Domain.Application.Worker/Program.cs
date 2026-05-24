@@ -56,6 +56,7 @@ builder.Services
     // .AddScoped<IMessageConsumer, RabbitMQConsumer>()
     .AddSingleton<IOAuthTokenService, OAuthTokenService>()
     .AddSingleton<IBiggestReportExport, BiggestReportExport>()
+    .AddSingleton<IBiggestReportImport, BiggestReportImport>()
     .AddSingleton<ReportCenter.App.Domain.Application.Worker.Reports.V1.Example.ExportExampleService>()
     .AddSingleton<ReportCenter.App.Domain.Application.Worker.Reports.V2.Example.ExportExampleService>();
 
@@ -80,165 +81,172 @@ builder.Services.AddHostedService<MessageConsumerTemplate>();
 var host = builder.Build();
 
 var _biggestReportExport = host.Services.GetRequiredService<IBiggestReportExport>();
+var _biggestReportImport = host.Services.GetRequiredService<IBiggestReportImport>();
 
-await using (var stream = _biggestReportExport.OpenWriteStream(
-    Path.Combine("..", "tmp", "file.xlsx"),
-    "example",
-    DateTimeOffset.Now,
-    2))
+await using (var stream = await _biggestReportImport.OpenReadStreamAsync(Path.Combine("..", "tmp", "fileEditado.xlsx")))
 {
-
-    stream.SetHeader([
-        new Cell
-        {
-            DataType = CellValues.String,
-            CellValue = new CellValue("Texto")
-        },
-        new Cell
-        {
-            DataType = CellValues.String,
-            CellValue = new CellValue("Inteiro")
-        },
-        new Cell
-        {
-            DataType = CellValues.String,
-            CellValue = new CellValue("Decimal")
-        }
-    ]);
-
-    await stream.WriteRowAsync([
-        new Cell
-        {
-            DataType = CellValues.String,
-            CellValue = new CellValue("teste")
-        },
-        new Cell
-        {
-            DataType = CellValues.Number,
-            CellValue = new CellValue(20)
-        },
-        new Cell
-        {
-            DataType = CellValues.Number,
-            CellValue = new CellValue(1)
-        }
-    ]);
-
-    await stream.WriteRowAsync([
-        new Cell
-        {
-            DataType = CellValues.String,
-            CellValue = new CellValue("teste")
-        },
-        new Cell
-        {
-            DataType = CellValues.Number,
-            CellValue = new CellValue(20)
-        },
-        new Cell
-        {
-            DataType = CellValues.Number,
-            CellValue = new CellValue(2)
-        }
-    ]);
-
-    stream.EnsureSheet("teste");
-
-    stream.SetHeader([
-        new Cell
-        {
-            DataType = CellValues.String,
-            CellValue = new CellValue("Texto")
-        },
-        new Cell
-        {
-            DataType = CellValues.String,
-            CellValue = new CellValue("Inteiro")
-        },
-        new Cell
-        {
-            DataType = CellValues.String,
-            CellValue = new CellValue("Decimal")
-        }
-    ]);
-
-    await stream.WriteRowAsync([
-        new Cell
-        {
-            DataType = CellValues.String,
-            CellValue = new CellValue("teste")
-        },
-        new Cell
-        {
-            DataType = CellValues.Number,
-            CellValue = new CellValue(20)
-        },
-        new Cell
-        {
-            DataType = CellValues.Number,
-            CellValue = new CellValue(1)
-        }
-    ]);
-
-    await stream.WriteRowAsync([
-        new Cell
-        {
-            DataType = CellValues.String,
-            CellValue = new CellValue("teste")
-        },
-        new Cell
-        {
-            DataType = CellValues.Number,
-            CellValue = new CellValue(20)
-        },
-        new Cell
-        {
-            DataType = CellValues.Number,
-            CellValue = new CellValue(2)
-        }
-    ]);
-
-    stream.EnsureSheet("example");
-
-    await stream.WriteRowAsync([
-        new Cell
-        {
-            DataType = CellValues.String,
-            CellValue = new CellValue("teste")
-        },
-        new Cell
-        {
-            DataType = CellValues.Number,
-            CellValue = new CellValue(20)
-        },
-        new Cell
-        {
-            DataType = CellValues.Number,
-            CellValue = new CellValue(3)
-        }
-    ]);
-
-    await stream.WriteRowAsync([
-        new Cell
-        {
-            DataType = CellValues.String,
-            CellValue = new CellValue("teste")
-        },
-        new Cell
-        {
-            DataType = CellValues.Number,
-            CellValue = new CellValue(20)
-        },
-        new Cell
-        {
-            DataType = CellValues.Number,
-            CellValue = new CellValue(4)
-        }
-    ]);
-
-    stream.EnsureSheet("vazio");
-
-    await stream.SaveAsync();
+    await stream.OpenSheetAsync("example");
 }
+
+
+// await using (var stream = _biggestReportExport.OpenWriteStream(
+//     Path.Combine("..", "tmp", "file.xlsx"),
+//     "example",
+//     DateTimeOffset.Now,
+//     2))
+// {
+
+//     stream.SetHeader([
+//         new Cell
+//         {
+//             DataType = CellValues.String,
+//             CellValue = new CellValue("Texto")
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.String,
+//             CellValue = new CellValue("Inteiro")
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.String,
+//             CellValue = new CellValue("Decimal")
+//         }
+//     ]);
+
+//     await stream.WriteRowAsync([
+//         new Cell
+//         {
+//             DataType = CellValues.String,
+//             CellValue = new CellValue("teste")
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.Number,
+//             CellValue = new CellValue(20)
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.Number,
+//             CellValue = new CellValue(1)
+//         }
+//     ]);
+
+//     await stream.WriteRowAsync([
+//         new Cell
+//         {
+//             DataType = CellValues.String,
+//             CellValue = new CellValue("teste")
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.Number,
+//             CellValue = new CellValue(20)
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.Number,
+//             CellValue = new CellValue(2)
+//         }
+//     ]);
+
+//     stream.EnsureSheet("teste");
+
+//     stream.SetHeader([
+//         new Cell
+//         {
+//             DataType = CellValues.String,
+//             CellValue = new CellValue("Texto")
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.String,
+//             CellValue = new CellValue("Inteiro")
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.String,
+//             CellValue = new CellValue("Decimal")
+//         }
+//     ]);
+
+//     await stream.WriteRowAsync([
+//         new Cell
+//         {
+//             DataType = CellValues.String,
+//             CellValue = new CellValue("teste")
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.Number,
+//             CellValue = new CellValue(20)
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.Number,
+//             CellValue = new CellValue(1)
+//         }
+//     ]);
+
+//     await stream.WriteRowAsync([
+//         new Cell
+//         {
+//             DataType = CellValues.String,
+//             CellValue = new CellValue("teste")
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.Number,
+//             CellValue = new CellValue(20)
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.Number,
+//             CellValue = new CellValue(2)
+//         }
+//     ]);
+
+//     stream.EnsureSheet("example");
+
+//     await stream.WriteRowAsync([
+//         new Cell
+//         {
+//             DataType = CellValues.String,
+//             CellValue = new CellValue("teste")
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.Number,
+//             CellValue = new CellValue(20)
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.Number,
+//             CellValue = new CellValue(3)
+//         }
+//     ]);
+
+//     await stream.WriteRowAsync([
+//         new Cell
+//         {
+//             DataType = CellValues.String,
+//             CellValue = new CellValue("teste")
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.Number,
+//             CellValue = new CellValue(20)
+//         },
+//         new Cell
+//         {
+//             DataType = CellValues.Number,
+//             CellValue = new CellValue(4)
+//         }
+//     ]);
+
+//     stream.EnsureSheet("vazio");
+
+//     await stream.SaveAsync();
+// }
 
 // await host.RunAsync();
