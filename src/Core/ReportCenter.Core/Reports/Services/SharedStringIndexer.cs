@@ -11,21 +11,22 @@ public class SharedStringIndexer : IDisposable
     public SharedStringIndexer()
     {
         _tempFilePath = Path.Combine(Path.GetTempPath(), "report-center", Guid.NewGuid().ToString(), "sharedString.txt");
+        Directory.CreateDirectory(Path.GetDirectoryName(_tempFilePath)!);
     }
 
     /// <summary>
     /// Lê sharedStrings.xml em streaming e grava em file index.
     /// </summary>
-    public async Task BuildIndexAsync(string fileName)
+    public async Task BuildIndexAsync(string fullFileName)
     {
         if (_isBuilt)
             return;
 
-        if (!File.Exists(_tempFilePath))
+        if (!File.Exists(fullFileName))
             return;
 
         await using (Stream stream = new FileStream(
-            fileName,
+            fullFileName,
             FileMode.Open,
             FileAccess.Read,
             FileShare.Read,
@@ -117,6 +118,6 @@ public class SharedStringIndexer : IDisposable
     public void Dispose()
     {
         if (File.Exists(_tempFilePath))
-            File.Delete(_tempFilePath);
+            Directory.Delete(Path.GetDirectoryName(_tempFilePath)!, true);
     }
 }

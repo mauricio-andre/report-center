@@ -21,3 +21,6 @@ dotnet ef database update -p ./src/Apps/ReportCenter.App.DbMigrator -c Administr
 
 dotnet ef database update -p ./src/Apps/ReportCenter.App.DbMigrator -c CoreDbContext
 ```
+
+TODO: Criar parâmetro para mudar estratégia de leitura de sharedString, entre atual e uso com dictionary
+TODO: Criar parâmetro para permitir criar a pasta de arquivos temporários em lugar alternativo ao caminho de arquivos temporários

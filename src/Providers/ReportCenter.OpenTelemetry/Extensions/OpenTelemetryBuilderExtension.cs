@@ -54,7 +54,8 @@ public static class OpenTelemetryBuilderExtension
                 .AddRuntimeInstrumentation()
                 .AddHttpClientInstrumentation()
                 .AddMeter("Microsoft.AspNetCore.Hosting")
-                .AddMeter("Microsoft.AspNetCore.Server.Kestrel");
+                .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
+                .AddMeter("ReportCenter.App");
 
             string? endpoint = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT");
 
