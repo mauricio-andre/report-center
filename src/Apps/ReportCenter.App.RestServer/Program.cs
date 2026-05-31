@@ -64,12 +64,12 @@ public class Program
             .AddScoped<ICurrentIdentity, CurrentIdentity>()
             .AddSingleton(_ => new ReportCenterActivitySource(builder.Configuration.GetValue<string>("ServiceName")!))
             .AddScoped<IReportRepository, ExportRepository>()
-            .AddSingleton<IMessagePublisher, AzureServiceBusPublisher>()
-            .AddSingleton<IMessageConsumer, AzureServiceBusConsumer>()
+            // .AddSingleton<IMessagePublisher, AzureServiceBusPublisher>()
+            // .AddSingleton<IMessageConsumer, AzureServiceBusConsumer>()
             // .AddSingleton<IStorageService, AzureBlobStorage>();
-            .AddSingleton<IStorageService, LocalStorage>();
-        // .AddSingleton<IMessagePublisher, RabbitMQPublisher>();
-        // .AddSingleton<IMessageConsumer, RabbitMQConsumer>();
+            .AddSingleton<IStorageService, LocalStorage>()
+            .AddSingleton<IMessagePublisher, RabbitMQPublisher>()
+            .AddSingleton<IMessageConsumer, RabbitMQConsumer>();
 
         // Configuration string location
         builder.Services.Configure<RequestLocalizationOptions>(options =>
@@ -158,8 +158,8 @@ public class Program
         // Configure providers
         builder.Services.AddCustomStringLocalizerProvider();
         // builder.Services.AddAzureBlobStorageProvider(builder.Configuration, builder.Configuration.GetConnectionString("BlobStorage")!);
-        // builder.Services.AddRabbitMQProvider(builder.Configuration, builder.Configuration.GetConnectionString("RabbitMQ")!);
-        builder.Services.AddAzureServiceBusProvider(builder.Configuration, builder.Configuration.GetConnectionString("ServiceBus")!);
+        // builder.Services.AddAzureServiceBusProvider(builder.Configuration, builder.Configuration.GetConnectionString("ServiceBus")!);
+        builder.Services.AddRabbitMQProvider(builder.Configuration, builder.Configuration.GetConnectionString("RabbitMQ")!);
         builder.Services.AddSwaggerProvider(builder.Configuration);
         builder.AddOpenTelemetryProvider();
 

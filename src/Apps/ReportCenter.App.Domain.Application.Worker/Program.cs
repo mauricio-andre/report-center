@@ -1,4 +1,5 @@
 using DocumentFormat.OpenXml.Spreadsheet;
+using ReportCenter.RabbitMQ.Extensions;
 using FluentValidation;
 using MediatR;
 using ReportCenter.App.Domain.Application.Worker.Reports;
@@ -26,6 +27,7 @@ using ReportCenter.MongoDB.Repositories;
 using ReportCenter.OAuth.Extensions;
 using ReportCenter.OAuth.Options;
 using ReportCenter.OpenTelemetry.Extensions;
+using ReportCenter.RabbitMQ.Services;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -50,10 +52,10 @@ builder.Services
     .AddSingleton<IReportServiceFactory, ReportServiceFactory>()
     .AddSingleton<IStorageService, LocalStorage>()
     // .AddSingleton<IStorageService, AzureBlobStorage>()
-    .AddSingleton<IMessagePublisher, AzureServiceBusPublisher>()
-    .AddSingleton<IMessageConsumer, AzureServiceBusConsumer>()
-    // .AddScoped<IMessagePublisher, RabbitMQPublisher>()
-    // .AddScoped<IMessageConsumer, RabbitMQConsumer>()
+    // .AddSingleton<IMessagePublisher, AzureServiceBusPublisher>()
+    // .AddSingleton<IMessageConsumer, AzureServiceBusConsumer>()
+    .AddSingleton<IMessagePublisher, RabbitMQPublisher>()
+    .AddSingleton<IMessageConsumer, RabbitMQConsumer>()
     .AddSingleton<IOAuthTokenService, OAuthTokenService>()
     .AddSingleton<IBiggestReportExport, BiggestReportExport>()
     .AddSingleton<IBiggestReportImport, BiggestReportImport>()
@@ -67,9 +69,9 @@ builder.Services
 
 // Configure providers
 builder.Services.AddCustomStringLocalizerProvider();
-builder.Services.AddAzureBlobStorageProvider(builder.Configuration, builder.Configuration.GetConnectionString("BlobStorage")!);
-// builder.Services.AddRabbitMQProvider(builder.Configuration, builder.Configuration.GetConnectionString("RabbitMQ")!);
-builder.Services.AddAzureServiceBusProvider(builder.Configuration, builder.Configuration.GetConnectionString("ServiceBus")!);
+// builder.Services.AddAzureBlobStorageProvider(builder.Configuration, builder.Configuration.GetConnectionString("BlobStorage")!);
+// builder.Services.AddAzureServiceBusProvider(builder.Configuration, builder.Configuration.GetConnectionString("ServiceBus")!);
+builder.Services.AddRabbitMQProvider(builder.Configuration, builder.Configuration.GetConnectionString("RabbitMQ")!);
 builder.Services.AddOAuthProvider(builder.Configuration);
 builder.AddOpenTelemetryProvider();
 

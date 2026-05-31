@@ -20,15 +20,6 @@ public static class RabbitMQServiceCollectionExtension
 
         services.Configure<RabbitMQOptions>(configuration.GetSection(RabbitMQOptions.Position));
 
-        // Garante a assinatura da classe como Scoped
-        var publisher = services.Last(s => s.ServiceType == typeof(IMessagePublisher));
-        services.Remove(publisher);
-        services.AddScoped(publisher.ServiceType, publisher.ImplementationType!);
-
-        var consumer = services.Last(s => s.ServiceType == typeof(IMessageConsumer));
-        services.Remove(consumer);
-        services.AddScoped(consumer.ServiceType, consumer.ImplementationType!);
-
         return services;
     }
 }
