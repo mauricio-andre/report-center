@@ -67,24 +67,6 @@ public class BiggestReportImportStream : IAsyncDisposable
         _sharedStringIndexer = new SharedStringIndexer();
     }
 
-    public void PrintAvailableLinesToConsole()
-    {
-        Console.WriteLine("workbook.xml - sheets");
-        var sheets = _workbook.Sheets?.Elements<Sheet>() ?? Enumerable.Empty<Sheet>();
-        foreach (var sheet in sheets)
-        {
-            Console.WriteLine(
-                $"Name={sheet.Name?.Value}, SheetId={sheet.SheetId?.Value}, Id={sheet.Id?.Value}, State={sheet.State?.Value}");
-        }
-
-        Console.WriteLine("workbook.xml.rels - relationships");
-        foreach (var relationship in _workbookXmlRels.Root?.Elements() ?? Enumerable.Empty<XElement>())
-        {
-            Console.WriteLine(
-                $"Id={relationship.Attribute("Id")?.Value}, Type={relationship.Attribute("Type")?.Value}, Target={relationship.Attribute("Target")?.Value}, TargetMode={relationship.Attribute("TargetMode")?.Value}");
-        }
-    }
-
     public async Task<BiggestReportImportSheet> OpenSheetAsync(string sheetName)
     {
         var sheetPathDictionary = new Dictionary<string, string>();
